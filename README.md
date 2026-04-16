@@ -1,0 +1,3 @@
+# CCBD Project: Manifest-based publishing
+
+TODO...
