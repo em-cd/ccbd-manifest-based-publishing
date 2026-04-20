@@ -265,20 +265,26 @@ def generate_dataset(size_label, output_dir="data"):
     return total_size
 
 
-def run_test():
+def run_test(output_dir="data"):
+    os.makedirs(output_dir, exist_ok=True)
+    out_path = os.path.join(output_dir, "test")
+    os.makedirs(out_path, exist_ok=True)
+
     """Generate a tiny test dataset and print fun stats."""
     rng = random.Random(SEED)
     table = generate_batch(1000, rng)
-    pq.write_table(table, "test_output.parquet")
-    df = table.to_pandas()
 
-    size_mb = os.path.getsize("test_output.parquet") / (1024 * 1024)
+    file_path = os.path.join(out_path, "test_output.parquet")
+    pq.write_table(table, file_path)
+
+    df = table.to_pandas()
+    size_mb = os.path.getsize(file_path) / (1024 * 1024)
 
     print("📜✨ Pride and Prejudice: The Social Season Dataset ✨📜")
     print(f"Generated {table.num_rows} events ({size_mb:.2f} MB)\n")
     print(f"Schema:\n{table.schema}\n")
     print("Sample events:")
-    print(df[["ts", "character", "region", "event_type", "value"]].head(10).to_string())
+    print(df[["user_id", "ts", "character", "region", "event_type", "value"]].head(10).to_string())
 
     print(f"\n🎩 Season Highlights:")
     print(f"  Balls attended: {len(df[df['event_type'] == 'ball_attendance'])}")
