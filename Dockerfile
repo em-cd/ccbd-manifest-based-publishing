@@ -9,4 +9,4 @@ RUN pip install -r requirements.txt
 # Copy the rest of the app
 COPY . .
 
-CMD ["python", "-u", "dataset_gen.py"]
+CMD ["python", "-u", "pipeline.py"]

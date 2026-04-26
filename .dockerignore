@@ -1,9 +1,21 @@
+# git
 .git
+.gitignore
+
+# python
 __pycache__/
 *.pyc
+
+# environment and venv
 .env
 .venv/
 venv/
+
+# dev & system
 .vscode/
 *.swp
 .DS_Store
+
+# local data
+data/
+*.parquet
