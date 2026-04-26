@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 
 SEED = 1813  # Year Pride and Prejudice was published
 
+# Where the files will output to by default
+DEFAULT_OUTPUT_DIR = "./data"
+
 # ═══════════════════════════════════════════════════════
 # 📜 Pride and Prejudice: The Social Season Dataset
 # ═══════════════════════════════════════════════════════
@@ -112,9 +115,10 @@ MONTHS = [
 # ═══════════════════════════════════════════════════════
 
 SIZES = {
+    "test": 1000,
     "S": 5_000_000,
     "M": 25_000_000,
-    "L": 100_000_000,
+    "L": 100_000_000
 }
 
 ROWS_PER_FILE = 1_000_000
@@ -227,7 +231,7 @@ def generate_batch(num_rows, rng):
 # 💾 Dataset writer
 # ═══════════════════════════════════════════════════════
 
-def generate_dataset(size_label, output_dir="data"):
+def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
     total_rows = SIZES[size_label]
     out_path = os.path.join(output_dir, size_label)
     os.makedirs(out_path, exist_ok=True)
@@ -239,6 +243,8 @@ def generate_dataset(size_label, output_dir="data"):
     print(f"\n📜 Generating {size_label} dataset ({total_rows:,} rows)...")
     print(f"   Output: {out_path}/\n")
 
+    file_paths = []
+
     while rows_written < total_rows:
         batch_size = min(ROWS_PER_FILE, total_rows - rows_written)
         table = generate_batch(batch_size, rng)
@@ -247,36 +253,35 @@ def generate_dataset(size_label, output_dir="data"):
         pq.write_table(table, file_path)
 
         file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
+
         rows_written += batch_size
         file_num += 1
-
         pct = (rows_written / total_rows) * 100
         print(f"  ✅ part-{file_num - 1:04d}.parquet | {batch_size:>10,} rows | {file_size_mb:>8.1f} MB | {pct:5.1f}%")
 
-    total_size = sum(
-        os.path.getsize(os.path.join(out_path, f))
-        for f in os.listdir(out_path)
-    )
+        file_paths.append(file_path)
+
+    total_size = sum(os.path.getsize(f) for f in file_paths)
+
+    if size_label == "test":
+        for file_path in file_paths:
+            print_test_stats(file_path)
+
     print(f"\n🎩 {size_label} complete!")
     print(f"   Files: {file_num}")
     print(f"   Rows:  {total_rows:,}")
-    print(f"   Size:  {total_size / 1e9:.2f} GB")
+    print(f"   Size:  {total_size / 1e9:.2f} GB\n")
 
-    return total_size
+    return {
+        "size_label": size_label,
+        "out_path": out_path,
+        "file_paths": file_paths,
+        "total_rows": total_rows,
+        "total_size": total_size
+    }
 
-
-def run_test(output_dir="data"):
-    os.makedirs(output_dir, exist_ok=True)
-    out_path = os.path.join(output_dir, "test")
-    os.makedirs(out_path, exist_ok=True)
-
-    """Generate a tiny test dataset and print fun stats."""
-    rng = random.Random(SEED)
-    table = generate_batch(1000, rng)
-
-    file_path = os.path.join(out_path, "test_output.parquet")
-    pq.write_table(table, file_path)
-
+def print_test_stats(file_path):
+    table = pq.read_table(file_path)
     df = table.to_pandas()
     size_mb = os.path.getsize(file_path) / (1024 * 1024)
 
@@ -307,7 +312,7 @@ def run_test(output_dir="data"):
     print(f'\n💬 Most Discussed: "{df["topic"].mode()[0]}"')
 
     print(f"\n📝 Sample Diary Entry:")
-    print(f"  {df['payload'].iloc[0][:200]}...")
+    print(f"  {df['payload'].iloc[0][:200]}...\n")
 
 
 # ═══════════════════════════════════════════════════════
@@ -326,12 +331,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--output",
-        default="data",
-        help="Output directory (default: data/)"
+        default=DEFAULT_OUTPUT_DIR,
+        help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})"
     )
     args = parser.parse_args()
 
-    if args.size == "test":
-        run_test()
-    else:
-        generate_dataset(args.size, args.output)
+    generate_dataset(args.size, args.output)

@@ -11,8 +11,6 @@ Configuration is provided via environment variables:
 - AWS_SECRET_ACCESS_KEY: IAM user secret key
 - S3_BUCKET_NAME: target S3 bucket
 
-
-
 ## How to run  it
 
 First you will need a `.env` file with the configuration listed above.
