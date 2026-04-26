@@ -21,3 +21,11 @@ This project uses Docker. If you have Docker installed, open a terminal and from
 docker build -t ccbd-project .
 docker run --env-file .env ccbd-project:latest
 ```
+
+By default this will generate a small test dataset, upload it to S3, and delete the local copy. To generate different sizes, you can pass in a size argument like this:
+
+```bash
+docker run --env-file .env ccbd-project:latest python -u pipeline.py --size S
+```
+
+The supported dataset sizes are test (~283K), S (~1GB), M (~5GB) and L (~10GB).
