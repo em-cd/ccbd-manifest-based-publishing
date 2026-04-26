@@ -13,7 +13,7 @@ Configuration is provided via environment variables:
 
 ## How to run  it
 
-First you will need a `.env` file with the configuration listed above.
+You will need a `.env` file with the AWS configuration listed above.
 
 This project uses Docker. If you have Docker installed, open a terminal and from within the project directory run the following commands:
 
@@ -28,4 +28,4 @@ By default this will generate a small test dataset, upload it to S3, and delete 
 docker run --env-file .env ccbd-project:latest python -u pipeline.py --size S
 ```
 
-The supported dataset sizes are test (~283K), S (~1GB), M (~5GB) and L (~10GB).
+The supported dataset sizes are **test** (~283K), **S** (~1GB), **M** (~5GB) and **L** (~10GB).
