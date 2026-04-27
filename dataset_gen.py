@@ -21,6 +21,8 @@ CHARACTERS = [
     "Caroline Bingley", "Kitty Bennet", "Mary Bennet", "Colonel Fitzwilliam"
 ]
 
+CHARACTER_ID = {c: i + 1 for i, c in enumerate(CHARACTERS)}
+
 LOCATIONS = [
     "Longbourn", "Netherfield", "Pemberley", "Meryton",
     "Rosings Park", "London", "Brighton", "Lambton"
@@ -160,66 +162,84 @@ def generate_diary_entry(rng):
 # 🎲 Batch generator
 # ═══════════════════════════════════════════════════════
 
-def generate_value(event, rng):
-    """Generate a context-appropriate value for each event type."""
-    if event == "fortune_discussed":
-        return round(rng.choice([5000, 10000, 2000, 100, 50]), 2)
-    elif event == "ball_attendance":
-        return round(rng.uniform(1, 10), 1)
-    elif event == "letter_written":
-        return round(rng.uniform(1, 20), 0)
-    elif event in ["proposal_rejected", "proposal_accepted"]:
-        return round(rng.uniform(0, 100), 0)
-    elif event == "gossip_spread":
-        return round(rng.uniform(1, 50), 0)
-    elif event == "piano_played_badly":
-        return round(rng.uniform(1, 10), 1)
-    elif event == "long_walk_taken":
-        return round(rng.uniform(1, 6), 1)
-    elif event == "dramatic_hand_flex":
-        return round(rng.uniform(80, 100), 1)
-    elif event == "rain_encounter":
-        return round(rng.uniform(1, 10), 1)
-    elif event in ["pride_displayed", "prejudice_displayed"]:
-        return round(rng.uniform(50, 100), 1)
-    else:
-        return round(rng.uniform(0, 100), 2)
-
-
 def generate_batch(num_rows, rng):
     """Generate a batch of rows as a PyArrow table."""
     base_time = datetime(1812, 1, 1)
+    randint = rng.randint
+    uniform = rng.uniform
+    choice = rng.choice
+    choices = rng.choices
 
-    ts = []
-    character_ids = []
-    characters = []
-    locations = []
-    event_types = []
-    topics = []
-    moods = []
+    events = choices(EVENT_TYPES, k=num_rows)
+    characters = choices(CHARACTERS, k=num_rows)
+    character_ids = [CHARACTER_ID[c] for c in characters]
+    locations = choices(LOCATIONS, k=num_rows)
+    topics = choices(TOPICS, k=num_rows)
+    moods = choices(MOODS, k=num_rows)
+    seconds = [randint(0, 365 * 24 * 3600) for _ in range(num_rows)]
+    ts = [base_time + timedelta(seconds=s) for s in seconds]
+
+    # Generate values
     values = []
-    diary = []
+    for event in events:
+        if event == "fortune_discussed":
+            values.append(round(choice([5000, 10000, 2000, 100, 50]), 2))
+        elif event == "ball_attendance":
+            values.append(round(uniform(1, 10), 1))
+        elif event == "letter_written":
+            values.append(round(uniform(1, 20), 0))
+        elif event in ("proposal_rejected", "proposal_accepted"):
+            values.append(round(uniform(0, 100), 0))
+        elif event == "gossip_spread":
+            values.append(round(uniform(1, 50), 0))
+        elif event == "piano_played_badly":
+            values.append(round(uniform(1, 10), 1))
+        elif event == "long_walk_taken":
+            values.append(round(uniform(1, 6), 1))
+        elif event == "dramatic_hand_flex":
+            values.append(round(uniform(80, 100), 1))
+        elif event == "rain_encounter":
+            values.append(round(uniform(1, 10), 1))
+        elif event in ("pride_displayed", "prejudice_displayed"):
+            values.append(round(uniform(50, 100), 1))
+        else:
+            values.append(round(uniform(0, 100), 2))
 
-    for _ in range(num_rows):
-        event = rng.choice(EVENT_TYPES)
-        character = rng.choice(CHARACTERS)
+    # Generate diary entries     
+    starters = choices(STARTERS, k=num_rows)
+    middles = choices(MIDDLES, k=num_rows)
+    endings = choices(ENDINGS, k=num_rows)
 
-        ts.append(base_time + timedelta(seconds=rng.randint(0, 365 * 24 * 3600)))
-        character_ids.append(CHARACTERS.index(character) + 1)
-        characters.append(character)
-        locations.append(rng.choice(LOCATIONS))
-        event_types.append(event)
-        topics.append(rng.choice(TOPICS))
-        moods.append(rng.choice(MOODS))
-        values.append(generate_value(event, rng))
-        diary.append(generate_diary_entry(rng))
+    refs = [randint(0, 999999) for _ in range(num_rows)]
+    days = [randint(1, 28) for _ in range(num_rows)]
+    months = choices(MONTHS, k=num_rows)
+    hours = [randint(1, 12) for _ in range(num_rows)]
+    minutes = [randint(0, 59) for _ in range(num_rows)]
+
+    noise_chars = "abcdefghijklmnopqrstuvwxyz "
+
+    diary = [
+        (
+            f"[{d} {m}, quarter past {h}:{mi:02d}] "
+            f"{s} {mid}, {end} "
+            f"Witnessed by {c} near {loc}. "
+            f"Mood of the room: {mo}. "
+            f"(Diary ref: {r:06d}) "
+            f"Postscript: {''.join(choices(noise_chars, k=80))}"
+        )
+        for d, m, h, mi, s, mid, end, c, loc, mo, r in zip(
+            days, months, hours, minutes,
+            starters, middles, endings,
+            characters, locations, moods, refs
+        )
+    ]
 
     return pa.table({
         "ts": ts,
         "user_id": character_ids,
         "character": characters,
         "region": locations,
-        "event_type": event_types,
+        "event_type": events,
         "topic": topics,
         "mood": moods,
         "value": values,
