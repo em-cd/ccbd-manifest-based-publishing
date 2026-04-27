@@ -118,13 +118,12 @@ MONTHS = [
 
 SIZES = {
     "test": 1000,
-    "S": 5_000_000,
-    "M": 25_000_000,
-    "L": 100_000_000
+    "S": 3_580_000,
+    "M": 17_900_000,
+    "L": 35_800_000
 }
 
 ROWS_PER_FILE = 1_000_000
-
 
 # ═══════════════════════════════════════════════════════
 # 📖 Diary entry generator
@@ -225,7 +224,7 @@ def generate_batch(num_rows, rng):
             f"Witnessed by {c} near {loc}. "
             f"Mood of the room: {mo}. "
             f"(Diary ref: {r:06d}) "
-            f"Postscript: {''.join(choices(noise_chars, k=80))}"
+            f"Postscript: {''.join(choices(noise_chars, k=200))}"
         )
         for d, m, h, mi, s, mid, end, c, loc, mo, r in zip(
             days, months, hours, minutes,
@@ -272,16 +271,16 @@ def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
         file_path = os.path.join(out_path, f"part-{file_num:04d}.parquet")
         pq.write_table(table, file_path)
 
-        file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
+        file_size_mib = os.path.getsize(file_path) / (1024 * 1024)
 
         rows_written += batch_size
         file_num += 1
         pct = (rows_written / total_rows) * 100
-        print(f"  ✅ part-{file_num - 1:04d}.parquet | {batch_size:>10,} rows | {file_size_mb:>8.1f} MB | {pct:5.1f}%")
+        print(f"  ✅ part-{file_num - 1:04d}.parquet | {batch_size:>10,} rows | {file_size_mib:>8.1f} MiB | {pct:5.1f}%")
 
         file_paths.append(file_path)
 
-    total_size = sum(os.path.getsize(f) for f in file_paths)
+    total_bytes = sum(os.path.getsize(f) for f in file_paths)
 
     if size_label == "test":
         for file_path in file_paths:
@@ -290,14 +289,14 @@ def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
     print(f"\n🎩 {size_label} complete!")
     print(f"   Files: {file_num}")
     print(f"   Rows:  {total_rows:,}")
-    print(f"   Size:  {total_size / 1e9:.2f} GB\n")
+    print(f"   Size: {total_bytes / 1e9:.2f} GB ({total_bytes / (1024 * 1024):.0f} MiB)")
 
     return {
         "size_label": size_label,
         "out_path": out_path,
         "file_paths": file_paths,
         "total_rows": total_rows,
-        "total_size": total_size
+        "total_size": total_bytes
     }
 
 def print_test_stats(file_path):
