@@ -264,6 +264,35 @@ def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
 
     file_paths = []
 
+
+    # Detect existing files
+    existing_files = sorted([
+        f for f in os.listdir(out_path)
+        if f.endswith(".parquet")
+    ])
+
+    # Resume generating from where it left off
+    if existing_files:
+        print(f"Found {len(existing_files)} existing files — resuming...")
+        file_paths.extend([
+            os.path.join(out_path, f) for f in existing_files
+        ])
+
+        max_index = max(
+            int(f.split("-")[1].split(".")[0])
+            for f in existing_files
+        )
+
+        file_num = max_index + 1
+        rows_written = (len(existing_files) - 1) * ROWS_PER_FILE
+
+        # Check last file properly, in case it wasn't full
+        last_file = os.path.join(out_path, existing_files[-1])
+        pf = pq.ParquetFile(last_file)
+        rows_written += pf.metadata.num_rows
+
+        print(f"   Resuming from file index {file_num} ({rows_written} rows already written)")
+
     while rows_written < total_rows:
         batch_size = min(ROWS_PER_FILE, total_rows - rows_written)
         table = generate_batch(batch_size, rng)
