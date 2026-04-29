@@ -1,0 +1,5 @@
+size,operation,total_mb,elapsed_s,throughput_mb_s,file_count,object_count,rows_matched,groups
+test,upload,0.29,0.58,0.5,1,,,
+test,listing,,0.0977,,,1,,
+test,download,0.29,0.28,1.04,1,,,
+test,scan,,0.036,,,,75,15
