@@ -19,55 +19,39 @@ if not BUCKET:
 s3 = boto3.client("s3", region_name=REGION)
 
 DATA_DIR = "./data"
+NUM_RUNS = 3  # Number of times to repeat each benchmark
+
 
 def get_prefix(size):
     return f"raw/{size}" if size == "test" else f"curated/{size}"
 
 
-#Upload throughput
+# Upload throughput
 def bench_upload(size):
-    #Upload all parquet files to S3 and measure throughput
     local_dir = os.path.join(DATA_DIR, size)
-    
-    # Test goes to raw, everything else to curated
     prefix = get_prefix(size)
-    
     files = sorted([f for f in os.listdir(local_dir) if f.endswith(".parquet")])
 
-    total_bytes = 0
-    start = time.time()
+    total_bytes = sum(os.path.getsize(os.path.join(local_dir, f)) for f in files)
 
+    start = time.time()
     for f in files:
         local_path = os.path.join(local_dir, f)
         s3_key = f"{prefix}/{f}"
-        file_size = os.path.getsize(local_path)
-        total_bytes += file_size
         s3.upload_file(local_path, BUCKET, s3_key)
-        print(f"  📤 {s3_key} ({file_size / 1e6:.1f} MB)")
-
     elapsed = time.time() - start
+
     throughput = (total_bytes / 1e6) / elapsed
-
-    print(f"  ⏱️  {total_bytes / 1e6:.1f} MB in {elapsed:.1f}s = {throughput:.1f} MB/s")
-
-    return {
-        "size": size,
-        "operation": "upload",
-        "total_mb": round(total_bytes / 1e6, 2),
-        "elapsed_s": round(elapsed, 2),
-        "throughput_mb_s": round(throughput, 2),
-        "file_count": len(files),
-    }
+    return total_bytes, elapsed, throughput, len(files)
 
 
-#Download throughput
+# Download throughput
 def bench_download(size):
-    #Download all parquet files from S3 and measure throughput.
     prefix = get_prefix(size)
-    download_dir = os.path.join(DATA_DIR, f"{size}_downloaded")
+    download_dir = os.path.join(DATA_DIR, f"{size}")
     os.makedirs(download_dir, exist_ok=True)
 
-    # List all objects
+    # List objects
     objects = []
     paginator = s3.get_paginator("list_objects_v2")
     for page in paginator.paginate(Bucket=BUCKET, Prefix=prefix):
@@ -76,34 +60,20 @@ def bench_download(size):
 
     total_bytes = 0
     start = time.time()
-
     for obj in objects:
         key = obj["Key"]
         filename = key.split("/")[-1]
         local_path = os.path.join(download_dir, filename)
         s3.download_file(BUCKET, key, local_path)
-        file_size = os.path.getsize(local_path)
-        total_bytes += file_size
-        print(f"  📥 {key} ({file_size / 1e6:.1f} MB)")
-
+        total_bytes += os.path.getsize(local_path)
     elapsed = time.time() - start
+
     throughput = (total_bytes / 1e6) / elapsed
-
-    print(f"  ⏱️  {total_bytes / 1e6:.1f} MB in {elapsed:.1f}s = {throughput:.1f} MB/s")
-
-    return {
-        "size": size,
-        "operation": "download",
-        "total_mb": round(total_bytes / 1e6, 2),
-        "elapsed_s": round(elapsed, 2),
-        "throughput_mb_s": round(throughput, 2),
-        "file_count": len(objects),
-    }
+    return total_bytes, elapsed, throughput, len(objects)
 
 
-#Listing time
+# Listing time
 def bench_listing(size):
-    #List all objects under a prefix and measure time.
     prefix = get_prefix(size)
 
     start = time.time()
@@ -114,24 +84,11 @@ def bench_listing(size):
             count += 1
     elapsed = time.time() - start
 
-    print(f"  📋 Listed {count} objects in {elapsed:.3f}s")
-
-    return {
-        "size": size,
-        "operation": "listing",
-        "object_count": count,
-        "elapsed_s": round(elapsed, 4),
-    }
+    return count, elapsed
 
 
-#Analytics query
+# Parquet scan (analytics query)
 def bench_scan(size):
-    """
-    Run an analytics query on local parquet files:
-    - Filter: region = 'Pemberley' AND ts in first half of 1812
-    - Group by: event_type
-    - Aggregate: count + average value
-    """
     local_dir = os.path.join(DATA_DIR, size)
     dataset = ds.dataset(local_dir, format="parquet")
 
@@ -153,43 +110,168 @@ def bench_scan(size):
 
     elapsed = time.time() - start
 
-    print(f"  🔍 {len(df):,} rows matched, {len(result)} groups, {elapsed:.2f}s")
-    print(result.to_string())
-
-    return {
-        "size": size,
-        "operation": "scan",
-        "rows_matched": len(df),
-        "groups": len(result),
-        "elapsed_s": round(elapsed, 4),
-    }
+    return len(df), len(result), elapsed
 
 
-#Save results
-def save_results(results, output_file="results.csv"):
-    #Append benchmark results to CSV
-    file_exists = os.path.exists(output_file)
+# Run with repeats
+def run_repeated(name, func, size, num_runs):
+    """Run a benchmark multiple times and collect results."""
+    print(f"\n── {name} ({num_runs} runs) ──")
+    results = []
 
+    for i in range(num_runs):
+        result = func(size)
+        results.append(result)
+        print(f"  Run {i + 1}/{num_runs} ✅")
+
+    return results
+
+
+# Save results
+def save_results(all_results, output_file="results.csv"):
     fieldnames = [
-        "size", "operation", "total_mb", "elapsed_s",
+        "size", "operation", "run", "total_mb", "elapsed_s",
         "throughput_mb_s", "file_count", "object_count",
-        "rows_matched", "groups"
+        "rows_matched", "groups", "avg_elapsed_s", "avg_throughput_mb_s"
     ]
+
+    file_exists = os.path.exists(output_file)
 
     with open(output_file, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if not file_exists:
             writer.writeheader()
-        for r in results:
+        for r in all_results:
             writer.writerow(r)
 
     print(f"\n💾 Results saved to {output_file}")
 
 
-#Main
+# Process results for one benchmark
+def process_upload_results(size, results):
+    rows = []
+    times = []
+    throughputs = []
+
+    for i, (total_bytes, elapsed, throughput, file_count) in enumerate(results):
+        times.append(elapsed)
+        throughputs.append(throughput)
+        rows.append({
+            "size": size,
+            "operation": "upload",
+            "run": i + 1,
+            "total_mb": round(total_bytes / 1e6, 2),
+            "elapsed_s": round(elapsed, 2),
+            "throughput_mb_s": round(throughput, 2),
+            "file_count": file_count,
+        })
+
+    # Add average row
+    rows.append({
+        "size": size,
+        "operation": "upload",
+        "run": "avg",
+        "total_mb": rows[0]["total_mb"],
+        "avg_elapsed_s": round(sum(times) / len(times), 2),
+        "avg_throughput_mb_s": round(sum(throughputs) / len(throughputs), 2),
+        "file_count": rows[0]["file_count"],
+    })
+
+    print(f"  📤 Upload avg: {rows[-1]['avg_elapsed_s']}s, {rows[-1]['avg_throughput_mb_s']} MB/s")
+    return rows
+
+
+def process_download_results(size, results):
+    rows = []
+    times = []
+    throughputs = []
+
+    for i, (total_bytes, elapsed, throughput, file_count) in enumerate(results):
+        times.append(elapsed)
+        throughputs.append(throughput)
+        rows.append({
+            "size": size,
+            "operation": "download",
+            "run": i + 1,
+            "total_mb": round(total_bytes / 1e6, 2),
+            "elapsed_s": round(elapsed, 2),
+            "throughput_mb_s": round(throughput, 2),
+            "file_count": file_count,
+        })
+
+    rows.append({
+        "size": size,
+        "operation": "download",
+        "run": "avg",
+        "total_mb": rows[0]["total_mb"],
+        "avg_elapsed_s": round(sum(times) / len(times), 2),
+        "avg_throughput_mb_s": round(sum(throughputs) / len(throughputs), 2),
+        "file_count": rows[0]["file_count"],
+    })
+
+    print(f"  📥 Download avg: {rows[-1]['avg_elapsed_s']}s, {rows[-1]['avg_throughput_mb_s']} MB/s")
+    return rows
+
+
+def process_listing_results(size, results):
+    rows = []
+    times = []
+
+    for i, (count, elapsed) in enumerate(results):
+        times.append(elapsed)
+        rows.append({
+            "size": size,
+            "operation": "listing",
+            "run": i + 1,
+            "object_count": count,
+            "elapsed_s": round(elapsed, 4),
+        })
+
+    rows.append({
+        "size": size,
+        "operation": "listing",
+        "run": "avg",
+        "object_count": rows[0]["object_count"],
+        "avg_elapsed_s": round(sum(times) / len(times), 4),
+    })
+
+    print(f"  📋 Listing avg: {rows[-1]['avg_elapsed_s']}s ({rows[0]['object_count']} objects)")
+    return rows
+
+
+def process_scan_results(size, results):
+    rows = []
+    times = []
+
+    for i, (rows_matched, groups, elapsed) in enumerate(results):
+        times.append(elapsed)
+        rows.append({
+            "size": size,
+            "operation": "scan",
+            "run": i + 1,
+            "rows_matched": rows_matched,
+            "groups": groups,
+            "elapsed_s": round(elapsed, 4),
+        })
+
+    rows.append({
+        "size": size,
+        "operation": "scan",
+        "run": "avg",
+        "rows_matched": rows[0]["rows_matched"],
+        "groups": rows[0]["groups"],
+        "avg_elapsed_s": round(sum(times) / len(times), 4),
+    })
+
+    print(f"  🔍 Scan avg: {rows[-1]['avg_elapsed_s']}s ({rows[0]['rows_matched']} rows matched)")
+    return rows
+
+
+# Main
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="📊 Benchmark Harness")
     parser.add_argument("--size", choices=["test", "S", "M", "L", "all"], required=True)
+    parser.add_argument("--runs", type=int, default=NUM_RUNS, help="Number of runs per benchmark")
     parser.add_argument("--output", default="results.csv")
     args = parser.parse_args()
 
@@ -202,22 +284,26 @@ if __name__ == "__main__":
 
     for size in sizes:
         print(f"\n{'═' * 50}")
-        print(f"📊 Benchmarking size: {size}")
+        print(f"📊 Benchmarking: {size} ({args.runs} runs each)")
         print(f"   Local: {DATA_DIR}/{size}")
         print(f"   S3:    s3://{BUCKET}/{get_prefix(size)}")
         print(f"{'═' * 50}")
 
-        print("\n── Upload ──")
-        all_results.append(bench_upload(size))
+        # Upload
+        upload_results = run_repeated("Upload", bench_upload, size, args.runs)
+        all_results.extend(process_upload_results(size, upload_results))
 
-        print("\n── Listing ──")
-        all_results.append(bench_listing(size))
+        # Listing
+        listing_results = run_repeated("Listing", bench_listing, size, args.runs)
+        all_results.extend(process_listing_results(size, listing_results))
 
-        print("\n── Download ──")
-        all_results.append(bench_download(size))
+        # Download
+        download_results = run_repeated("Download", bench_download, size, args.runs)
+        all_results.extend(process_download_results(size, download_results))
 
-        print("\n── Parquet Scan ──")
-        all_results.append(bench_scan(size))
+        # Scan
+        scan_results = run_repeated("Scan", bench_scan, size, args.runs)
+        all_results.extend(process_scan_results(size, scan_results))
 
     save_results(all_results, args.output)
     print("\n✅ All benchmarks complete!")
