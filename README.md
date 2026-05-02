@@ -1,19 +1,62 @@
-# CCBD Project: Manifest-based publishing
+# Cloud Computing & Big Data Project: S3 Data Lake Benchmarking Harness & Manifest-Based Publishing
 
-## Endpoint Configuration
+## Overview
 
-The project uses AWS S3 as the storage backend.
+This project has two parts:
 
-Configuration is provided via environment variables:
+1. A benchmarking harness for S3-based data lake operations
+2. A manifest-based dataset publishing system for safe versioned data release
+
+It is designed to compare performance across dataset sizes (S, M, L) and produce reproducible results for ingestion, query and publishing workloads.
+
+
+## Storage Layout
+
+The system uses the following S3 namespaces:
+
+### Benchmark data
+
+```
+s3://bucket/bench/<dataset_id>/
+```
+
+Used only for benchmarking.
+
+### Dataset publishing
+
+#### Staging (input datasets)
+
+```
+s3://bucket/staging/<dataset_id>/<version>/
+```
+
+New dataset versions are uploaded and validated here.
+
+#### Published (active dataset pointer)
+
+```
+s3://bucket/published/<dataset_id>/
+```
+
+Contains:
+
+- `latest.json`: current active version
+- `previous.json`: previous version for rollback
+
+
+## Configuration
+
+Create a `.env` file with the following variables:
 
 - AWS_DEFAULT_REGION: AWS region (e.g. eu-central-1)
 - AWS_ACCESS_KEY_ID: IAM user access key
 - AWS_SECRET_ACCESS_KEY: IAM user secret key
 - S3_BUCKET_NAME: target S3 bucket
 
-## How to run  it
+The benchmark assumes AWS credentials are already configured via environment variables or IAM role.
 
-You will need a `.env` file with the AWS configuration listed above.
+
+## Generating datasets
 
 This project uses Docker. If you have Docker installed, open a terminal and from within the project directory run the following commands:
 
@@ -29,3 +72,18 @@ docker run --env-file .env ccbd-project:latest python -u pipeline.py --size S
 ```
 
 The supported dataset sizes are **test** (~283K), **S** (~1GB), **M** (~5GB) and **L** (~10GB).
+
+
+## 🚀 Running Benchmarks
+
+Run a full benchmark suite:
+
+```bash
+python bench.py --size=S
+```
+
+Options:
+
+- --size: S | M | L | all
+- --runs: number of repetitions per test (default: 3)
+- --output: CSV output file (default: results.csv)
