@@ -1,10 +1,11 @@
+
 import os
 import time
 import csv
 import argparse
 from datetime import datetime
 from dotenv import load_dotenv
-from azure.storage.blob import BlobServiceClient
+from azure.storage.blob import BlobServiceClient, BlobBlock
 import pyarrow.dataset as ds
 
 load_dotenv()
@@ -16,7 +17,12 @@ CONTAINER = os.getenv("AZURE_CONTAINER")
 
 blob_service = BlobServiceClient(
     account_url=f"https://{ACCOUNT}.blob.core.windows.net",
-    credential=KEY
+    credential=KEY,
+    max_block_size=4 * 1024 * 1024,        # 4 MB chunks (default is 4MB)
+    max_single_put_size=8 * 1024 * 1024,    # Files under 8MB upload in one shot
+    max_page_size=4 * 1024 * 1024,
+    connection_timeout=300,
+    read_timeout=300,
 )
 container_client = blob_service.get_container_client(CONTAINER)
 
@@ -43,7 +49,12 @@ def bench_upload(size):
         blob_name = f"{prefix}{f}"
         blob_client = container_client.get_blob_client(blob_name)
         with open(local_path, "rb") as data:
-            blob_client.upload_blob(data, overwrite=True)
+            blob_client.upload_blob(
+                data,
+                overwrite=True,
+                max_concurrency=8,    # parallel chunk uploads within one file
+            )
+
     elapsed = time.time() - start
 
     throughput = (total_bytes / 1e6) / elapsed
@@ -72,7 +83,7 @@ def bench_download(size):
         local_path = os.path.join(download_dir, filename)
         blob_client = container_client.get_blob_client(blob.name)
         with open(local_path, "wb") as f:
-            data = blob_client.download_blob()
+            data = blob_client.download_blob(max_concurrency=8)
             data.readinto(f)
         file_size = os.path.getsize(local_path)
         total_bytes += file_size
