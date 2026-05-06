@@ -88,9 +88,8 @@ def bench_listing(backend, size):
     }
 
 # Parquet scan (analytics query)
-def bench_scan(backend, size):
+def bench_scan(backend, size, region=None, date_from=None, date_to=None):
     fs = backend.filesystem()
-
     dataset = ds.dataset(
         f"{backend.get_root()}/bench/{size}/",
         filesystem=fs,
@@ -99,13 +98,21 @@ def bench_scan(backend, size):
 
     start = time.perf_counter()
 
-    filter_expr = (
-        (ds.field("region") == "Pemberley") &
-        (ds.field("ts") >= datetime(1812, 1, 1)) &
-        (ds.field("ts") < datetime(1812, 7, 1))
-    )
+    filters = []
+    if region:
+        filters.append(ds.field("region") == region)
+    if date_from:
+        filters.append(ds.field("ts") >= datetime.fromisoformat(date_from))
+    if date_to:
+        filters.append(ds.field("ts") < datetime.fromisoformat(date_to))
 
-    table = dataset.to_table(filter=filter_expr)
+    if filters:
+        filter_expr = filters[0]
+        for f in filters[1:]:
+            filter_expr = filter_expr & f
+        table = dataset.to_table(filter=filter_expr)
+    else:
+        table = dataset.to_table()  # ← this is the only to_table call now
 
     result = table.group_by("event_type").aggregate([
         ("value", "count"),
@@ -202,6 +209,9 @@ if __name__ == "__main__":
     parser.add_argument("--size", choices=["test", "S", "M", "L", "all"], required=True)
     parser.add_argument("--backend", choices=["s3", "azure", "all"], required=True)
     parser.add_argument("--runs", type=int, default=NUM_RUNS, help="Number of runs per benchmark")
+    parser.add_argument("--region", default="Pemberley")
+    parser.add_argument("--date-from", default=None)
+    parser.add_argument("--date-to", default=None)
     parser.add_argument("--output", default="results.csv")
     args = parser.parse_args()
 
