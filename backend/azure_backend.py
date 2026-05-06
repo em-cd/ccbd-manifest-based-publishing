@@ -36,7 +36,7 @@ class AzureBackend:
 
     pages = self.container_client.list_blobs(
         name_starts_with=prefix
-    ).by_page(results_per_page=1000) # Match S3 default
+    ).by_page() 
 
     for page in pages:
         page_count += 1
