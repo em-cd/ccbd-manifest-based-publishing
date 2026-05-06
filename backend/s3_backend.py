@@ -19,14 +19,16 @@ class S3Backend:
 
   def list_objects(self, prefix):
     keys = []
+    page_count = 0
 
     paginator = self.s3.get_paginator("list_objects_v2")
 
     for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
+      page_count += 1
       for obj in page.get("Contents", []):
         keys.append(obj["Key"])
 
-    return keys
+    return keys, page_count
 
   def download_file(self, local_path: str, key: str = None):
     if not key:

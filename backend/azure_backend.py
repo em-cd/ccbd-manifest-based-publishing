@@ -31,10 +31,19 @@ class AzureBackend:
     self.container_client = blob_service.get_container_client(self.container)
 
   def list_objects(self, prefix):
-    return [
-      blob.name
-      for blob in self.container_client.list_blobs(name_starts_with=prefix)
-    ]
+    keys = []
+    page_count = 0
+
+    pages = self.container_client.list_blobs(
+        name_starts_with=prefix
+    ).by_page(results_per_page=1000) # Match S3 default
+
+    for page in pages:
+        page_count += 1
+        for blob in page:
+            keys.append(blob.name)
+
+    return keys, page_count
 
   def download_file(self, local_path: str, key: str = None):
     if not key:

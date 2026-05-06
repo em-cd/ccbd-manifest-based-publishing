@@ -20,7 +20,7 @@ def get_prefix(size):
 def get_local_dir(size):
     return f"{DATA_DIR}/{size}"
 
-def bench_upload(store, size):
+def bench_upload(backend, size):
     prefix = get_prefix(size)
     local_dir = get_local_dir(size)
 
@@ -36,66 +36,59 @@ def bench_upload(store, size):
             keys.append(prefix + rel)
 
     total_bytes = 0
-    start = time.time()
+    start = time.perf_counter()
 
     for local_path, key in zip(files, keys):
-        total_bytes += store.upload_file(local_path, key)
+        total_bytes += backend.upload_file(local_path, key)
 
-    elapsed = time.time() - start
-    total_mb = total_bytes / (1024 * 1024)
-    throughput = total_mb / elapsed if elapsed > 0 else 0
+    elapsed_ms = (time.perf_counter() - start) * 1000
 
     return {
         "total_bytes": total_bytes,
-        "total_mb": total_mb,
-        "elapsed_s": elapsed,
-        "throughput_mb_s": throughput,
-        "file_count": len(files)
+        "elapsed_ms": elapsed_ms,
+        "object_count": len(files),
     }
 
-def bench_download(store, size):
+def bench_download(backend, size):
     prefix = get_prefix(size)
     local_dir = get_local_dir(size)
 
-    keys = store.list_objects(prefix)
+    keys, page_count = backend.list_objects(prefix)
 
     total_bytes = 0
-    start = time.time()
+    start = time.perf_counter()
 
     for key in keys:
         relative_path = key.replace(prefix, "")
         local_path = os.path.join(local_dir, relative_path)
 
-        total_bytes += store.download_file(local_path, key)
+        total_bytes += backend.download_file(local_path, key)
 
-    elapsed = time.time() - start
-    total_mb = total_bytes / (1024 * 1024)
-    throughput = total_mb / elapsed if elapsed > 0 else 0
+    elapsed_ms = (time.perf_counter() - start) * 1000
 
     return {
         "total_bytes": total_bytes,
-        "total_mb": total_mb,
-        "elapsed_s": elapsed,
-        "throughput_mb_s": throughput,
-        "file_count": len(keys)
+        "elapsed_ms": elapsed_ms,
+        "object_count": len(keys),
     }
 
-def bench_listing(store, size):
+def bench_listing(backend, size):
     prefix = get_prefix(size)
 
-    start = time.time()
+    start = time.perf_counter()
 
-    keys = store.list_objects(prefix)
+    keys, page_count = backend.list_objects(prefix)
 
-    elapsed = time.time() - start
+    elapsed_ms = (time.perf_counter() - start) * 1000
 
     return {
+        "elapsed_ms": elapsed_ms,
         "object_count": len(keys),
-        "elapsed_s": elapsed
+        "list_requests": page_count
     }
 
 # Parquet scan (analytics query)
-def bench_scan(store, size):
+def bench_scan(backend, size):
     fs = backend.filesystem()
 
     dataset = ds.dataset(
@@ -104,7 +97,7 @@ def bench_scan(store, size):
         format="parquet"
     )
 
-    start = time.time()
+    start = time.perf_counter()
 
     filter_expr = (
         (ds.field("region") == "Pemberley") &
@@ -119,12 +112,14 @@ def bench_scan(store, size):
         ("value", "mean")
     ])
 
-    elapsed = time.time() - start
+    elapsed_ms = (time.perf_counter() - start) * 1000
 
     return {
+        "total_bytes": None,
+        "elapsed_ms": elapsed_ms,
+        "object_count": None,
         "rows_matched": table.num_rows,
         "num_groups": result.num_rows,
-        "elapsed_s": elapsed
     }
 
 def run_repeated(name, func, num_runs):
@@ -141,9 +136,9 @@ def run_repeated(name, func, num_runs):
 
 def save_results(all_results, output_file="results.csv"):
     fieldnames = [
-        "backend", "size", "operation", "run", "total_bytes", "total_mb", "elapsed_s",
-        "throughput_mb_s", "file_count", "object_count",
-        "rows_matched", "num_groups", "avg_elapsed_s", "avg_throughput_mb_s"
+        "backend", "size_label", "test_type", "run", "total_bytes", "total_mb", "elapsed_ms",
+        "throughput_mb_s", "object_count", "object_size_mb", "list_requests",
+        "rows_matched", "num_groups"
     ]
 
     file_exists = os.path.exists(output_file)
@@ -157,53 +152,47 @@ def save_results(all_results, output_file="results.csv"):
 
     print(f"\n💾 Results saved to {output_file}")
 
-def process_results(backend_name, size, operation, results, value_keys, extra_keys):
+def process_results(backend_name, size, test_type, results):
     """
     Generic benchmark result processor.
-
-    - backend_name: name of backend data store (azure or s3)
-    - size: dataset size (S/M/L)
-    - operation: upload/download/listing/scan
-    - results: list of dicts (one per run)
-    - value_keys: numeric fields to average (e.g. ["elapsed", "throughput"])
-    - extra_keys: non-numeric fields to carry over (e.g. counts)
     """
     rows = []
-    accum = {k: [] for k in value_keys}
 
     for i, r in enumerate(results):
-        for k in value_keys:
-            accum[k].append(r.get(k, 0))
+        total_bytes = r.get("total_bytes")
+        elapsed_ms = r.get("elapsed_ms")
+        object_count = r.get("object_count")
+
+        # Compute derived keys
+        if total_bytes is not None and elapsed_ms > 0:
+            total_mb = total_bytes / (1024 * 1024)
+            throughput_mb_s = (total_mb * 1000) / elapsed_ms
+        else:
+            total_mb = None
+            throughput_mb_s = None
+
+        if total_mb is not None and object_count:
+            object_size_mb = total_mb / object_count
+        else:
+            object_size_mb = None
 
         row = {
             "backend": backend_name,
-            "size": size,
-            "operation": operation,
+            "size_label": size,
+            "test_type": test_type,
             "run": i + 1,
+            "elapsed_ms": elapsed_ms,
+            "total_bytes": total_bytes,
+            "total_mb": total_mb,
+            "throughput_mb_s": throughput_mb_s,
+            "object_count": object_count,
+            "object_size_mb": object_size_mb,
+            "list_requests": r.get("list_requests"),
+            "rows_matched": r.get("rows_matched"),
+            "num_groups": r.get("num_groups"),
         }
 
-        for k in value_keys:
-            row[k] = r.get(k)
-
-        for k in extra_keys:
-            row[k] = r.get(k)
-
         rows.append(row)
-
-    avg_row = {
-        "backend": backend_name,
-        "size": size,
-        "operation": operation,
-        "run": "avg",
-    }
-    
-    for k in value_keys:
-        avg_row[f"avg_{k}"] = sum(accum[k]) / max(len(accum[k]), 1)
-
-    for k in extra_keys:
-        avg_row[k] = results[0].get(k)
-
-    rows.append(avg_row)
 
     return rows
 
@@ -238,50 +227,22 @@ if __name__ == "__main__":
 
             # Upload
             upload_results = run_repeated("Upload", lambda: bench_upload(backend, size), args.runs)
-            processed_upload_results = process_results(
-                backend,
-                size,
-                "upload",
-                upload_results,
-                value_keys=["elapsed_s", "throughput_mb_s"],
-                extra_keys=["file_count", "total_bytes", "total_mb"]
-            )
+            processed_upload_results = process_results(backend_name, size, "upload", upload_results)
             all_results.extend(processed_upload_results)
 
             # Download
             download_results = run_repeated("Download", lambda: bench_download(backend, size), args.runs)
-            processed_download_results = process_results(
-                backend,
-                size,
-                "download",
-                download_results,
-                value_keys=["elapsed_s", "throughput_mb_s"],
-                extra_keys=["file_count", "total_bytes", "total_mb"]
-            )
+            processed_download_results = process_results(backend_name, size, "download", download_results)
             all_results.extend(processed_download_results)
 
             # Listing
             listing_results = run_repeated("Listing", lambda: bench_listing(backend, size), args.runs)
-            processed_listing_results = process_results(
-                backend,
-                size,
-                "listing",
-                listing_results,
-                value_keys=["elapsed_s"],
-                extra_keys=["object_count", "total_bytes"]
-            )
+            processed_listing_results = process_results(backend_name, size, "listing", listing_results)
             all_results.extend(processed_listing_results)
 
             # Scan
             scan_results = run_repeated("Scan", lambda: bench_scan(backend, size), args.runs)
-            processed_scan_results = process_results(
-                backend,
-                size,
-                "scan",
-                scan_results,
-                value_keys=["elapsed_s"],
-                extra_keys=["rows_matched", "num_groups"]
-            )
+            processed_scan_results = process_results(backend_name, size, "scan", scan_results)
             all_results.extend(processed_scan_results)
 
     save_results(all_results, args.output)
