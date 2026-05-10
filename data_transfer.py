@@ -9,7 +9,11 @@ def upload(backend, dataset_id: str, local_dir: str, version: str = None, zone: 
     Upload a full Parquet dataset folder to staging area. If version is not
     provided, uploads to bench area.
     """
-    prefix = f"{zone}/{dataset_id}/{version}/"
+    if version is None:
+        prefix = f"{zone}/{dataset_id}/"
+    else:
+        prefix = f"{zone}/{dataset_id}/{version}/"
+
     files, keys = list_files(local_dir, prefix)
 
     for local_path, key in zip(files, keys):
