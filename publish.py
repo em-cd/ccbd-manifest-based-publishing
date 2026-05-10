@@ -125,10 +125,11 @@ def write_manifest(backend, version, validation, staging_prefix, published_prefi
     backend.write_json(latest_key, new_manifest)
 
 
-def naive_publish(backend, dataset_id, local_dataset_dir):
+def naive_publish(backend, dataset_id):
     """
     Naive publishing implementation for demo purposes. No manifest,
     no versioning, just writes to the curated zone. Sleep included
     to ensure we see inconsistent reads during demo.
     """
+    local_dataset_dir = f"data/{dataset_id}"
     upload(backend, dataset_id, local_dataset_dir, version=None, zone="curated", sleep=0.5)
