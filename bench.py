@@ -3,15 +3,32 @@ import time
 import csv
 import argparse
 import pyarrow.dataset as ds
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.azure_backend import AzureBackend
 from backend.s3_backend import S3Backend
+from publish import validate_dataset, write_manifest
 
 DATA_DIR = "./data"
 NUM_RUNS = 3  # Number of times to repeat each benchmark
+
+DATASET_INFO = {
+    "test": {"rows": 1000, "objects": 1}, # Only for debugging
+    "S": {"rows": 3_580_000, "objects": 4},
+    "M": {"rows": 17_900_000, "objects": 18},
+    "L": {"rows": 35_800_000, "objects": 36}
+}
+
 BACKEND_MAP = {
     "s3": S3Backend,
     "azure": AzureBackend,
+}
+
+BENCH_FUNCS = {
+    "upload": lambda b, s: bench_upload(b, s),
+    "download": lambda b, s: bench_download(b, s),
+    "listing": lambda b, s: bench_listing(b, s),
+    "scan": lambda b, s: bench_scan(b, s, region="Pemberley"),
+    "publish": lambda b, s: bench_publish(b, s),
 }
 
 def get_prefix(size):
@@ -53,7 +70,7 @@ def bench_download(backend, size):
     prefix = get_prefix(size)
     local_dir = get_local_dir(size)
 
-    keys, page_count = backend.list_objects(prefix)
+    keys, _ = backend.list_objects(prefix)
 
     total_bytes = 0
     start = time.perf_counter()
@@ -112,7 +129,7 @@ def bench_scan(backend, size, region=None, date_from=None, date_to=None):
             filter_expr = filter_expr & f
         table = dataset.to_table(filter=filter_expr)
     else:
-        table = dataset.to_table()  # ← this is the only to_table call now
+        table = dataset.to_table()
 
     result = table.group_by("event_type").aggregate([
         ("value", "count"),
@@ -122,11 +139,43 @@ def bench_scan(backend, size, region=None, date_from=None, date_to=None):
     elapsed_ms = (time.perf_counter() - start) * 1000
 
     return {
-        "total_bytes": None,
         "elapsed_ms": elapsed_ms,
-        "object_count": None,
         "rows_matched": table.num_rows,
         "num_groups": result.num_rows,
+    }
+
+def bench_publish(backend, size):
+    """
+    Benchmarks manifest-based publish:
+    - validation time
+    - manifest write time
+    - total time
+    """
+    version = "v1" # fixed for benchmark
+    staging_prefix = f"bench/{size}/" # read from bench data, not staging
+    published_prefix = f"bench/published/{size}/"
+
+    start = time.perf_counter()
+
+    # 1. Validation only timing
+    validation = validate_dataset(
+        f"{backend.get_root()}/{staging_prefix}",
+        filesystem=backend.filesystem()
+    )
+    mid = time.perf_counter()
+
+    # 2. Manifest timing
+    write_manifest(backend, version, validation, staging_prefix, published_prefix)
+    end = time.perf_counter()
+
+    validation_ms = (mid - start) * 1000
+    meta_ms = (end - mid) * 1000
+    elapsed_ms = (end - start) * 1000
+
+    return {
+        "validation_ms": validation_ms,
+        "metadata_ms": meta_ms,
+        "elapsed_ms": elapsed_ms
     }
 
 def run_repeated(name, func, num_runs):
@@ -143,9 +192,11 @@ def run_repeated(name, func, num_runs):
 
 def save_results(all_results, output_file="results.csv"):
     fieldnames = [
-        "backend", "size_label", "test_type", "run", "total_bytes", "total_mb", "elapsed_ms",
-        "throughput_mb_s", "object_count", "object_size_mb", "list_requests",
-        "rows_matched", "num_groups"
+        "backend", "size_label", "test_type", "session_ts", "run", "row_count", "object_count", "elapsed_ms", # all benchmarks
+        "total_bytes", "total_mb", "object_size_mb", "throughput_mb_s", # upload/download
+        "list_requests", # listing
+        "rows_matched", "num_groups", # scan
+        "validation_ms", "metadata_ms" # publish
     ]
 
     file_exists = os.path.exists(output_file)
@@ -159,7 +210,7 @@ def save_results(all_results, output_file="results.csv"):
 
     print(f"\n💾 Results saved to {output_file}")
 
-def process_results(backend_name, size, test_type, results):
+def process_results(backend_name, size, test_type, results, session_ts):
     """
     Generic benchmark result processor.
     """
@@ -168,7 +219,7 @@ def process_results(backend_name, size, test_type, results):
     for i, r in enumerate(results):
         total_bytes = r.get("total_bytes")
         elapsed_ms = r.get("elapsed_ms")
-        object_count = r.get("object_count")
+        object_count = r.get("object_count") or DATASET_INFO[size]["objects"]
 
         # Compute derived keys
         if total_bytes is not None and elapsed_ms > 0:
@@ -187,16 +238,20 @@ def process_results(backend_name, size, test_type, results):
             "backend": backend_name,
             "size_label": size,
             "test_type": test_type,
+            "session_ts": session_ts,
             "run": i + 1,
             "elapsed_ms": elapsed_ms,
             "total_bytes": total_bytes,
             "total_mb": total_mb,
             "throughput_mb_s": throughput_mb_s,
+            "row_count": DATASET_INFO[size]["rows"],
             "object_count": object_count,
             "object_size_mb": object_size_mb,
             "list_requests": r.get("list_requests"),
             "rows_matched": r.get("rows_matched"),
             "num_groups": r.get("num_groups"),
+            "validation_ms": r.get("validation_ms"),
+            "metadata_ms": r.get("metadata_ms"),
         }
 
         rows.append(row)
@@ -208,6 +263,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="📊 Benchmark Harness")
     parser.add_argument("--size", choices=["test", "S", "M", "L", "all"], required=True)
     parser.add_argument("--backend", choices=["s3", "azure", "all"], required=True)
+    parser.add_argument(
+        "--tests",
+        nargs="+",
+        choices=list(BENCH_FUNCS) + ["all"],
+        default=["all"],
+        help="Which benchmarks to run"
+    )
     parser.add_argument("--runs", type=int, default=NUM_RUNS, help="Number of runs per benchmark")
     parser.add_argument("--region", default="Pemberley")
     parser.add_argument("--date-from", default=None)
@@ -222,8 +284,13 @@ if __name__ == "__main__":
 
     backends = list(BACKEND_MAP) if args.backend == "all" else [args.backend]
 
-    all_results = []
+    selected_tests = args.tests
+    if "all" in selected_tests:
+        selected_tests = list(BENCH_FUNCS)
 
+    # Run the benchmarks
+    session_ts = datetime.now(timezone.utc).isoformat()
+    all_results = []
     for backend_name in backends:
         backend_cls = BACKEND_MAP[backend_name]
         backend = backend_cls()
@@ -235,25 +302,17 @@ if __name__ == "__main__":
             print(f"   Remote: {backend_name}://{backend.get_root()}/{get_prefix(size)}")
             print(f"{'═' * 50}")
 
-            # Upload
-            upload_results = run_repeated("Upload", lambda: bench_upload(backend, size), args.runs)
-            processed_upload_results = process_results(backend_name, size, "upload", upload_results)
-            all_results.extend(processed_upload_results)
+            for test in selected_tests:
+                if test not in BENCH_FUNCS:
+                    continue
 
-            # Download
-            download_results = run_repeated("Download", lambda: bench_download(backend, size), args.runs)
-            processed_download_results = process_results(backend_name, size, "download", download_results)
-            all_results.extend(processed_download_results)
+                results = run_repeated(
+                    test,
+                    lambda t=test: BENCH_FUNCS[t](backend, size),
+                    args.runs
+                )
 
-            # Listing
-            listing_results = run_repeated("Listing", lambda: bench_listing(backend, size), args.runs)
-            processed_listing_results = process_results(backend_name, size, "listing", listing_results)
-            all_results.extend(processed_listing_results)
-
-            # Scan
-            scan_results = run_repeated("Scan", lambda: bench_scan(backend, size), args.runs)
-            processed_scan_results = process_results(backend_name, size, "scan", scan_results)
-            all_results.extend(processed_scan_results)
+                all_results.extend(process_results(backend_name, size, test, results, session_ts))
 
     save_results(all_results, args.output)
     print("\n✅ All benchmarks complete!")

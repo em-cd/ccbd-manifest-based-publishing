@@ -31,12 +31,12 @@ def publish(backend, dataset_id, version):
     published/<dataset_id>/latest.json to point to the new version.
     The previous manifest is saved to previous.json for rollback.
 
+    :param backend: the backend to publish to
     :param dataset_id (str): Dataset identifier.
     :param version (str): Version name (e.g., "v1").
     """
     staging_prefix = f"staging/{dataset_id}/{version}/"
-    latest_key = f"published/{dataset_id}/latest.json"
-    previous_key = f"published/{dataset_id}/previous.json"
+    published_prefix = f"published/{dataset_id}/{version}/"
 
     # 1. Validate
     validation = validate_dataset(
@@ -44,22 +44,8 @@ def publish(backend, dataset_id, version):
             filesystem=backend.filesystem()
         )
 
-    # 2. Read current latest manifest
-    current_latest = backend.read_json(latest_key)
-
-    # 3. Move latest -> previous
-    if current_latest:
-        backend.write_json(previous_key, current_latest)
-
-    # 4. Write new latest manifest
-    new_manifest = {
-        "version": version,
-        "prefix": staging_prefix,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "validation": validation
-    }
-
-    backend.write_json(latest_key, new_manifest)
+    # 2. Write manifest
+    write_manifest(backend, version, validation, staging_prefix, published_prefix)
 
     print(f"Published {dataset_id} {version} successfully.")
 
@@ -116,6 +102,28 @@ def validate_dataset(dataset_path, filesystem):
         "avg_value": round(avg_value, 2),
         "top_event_types": top_events,
     }
+
+def write_manifest(backend, version, validation, staging_prefix, published_prefix):
+    latest_key = f"{published_prefix}latest.json"
+    previous_key = f"{published_prefix}previous.json"
+
+    # 1. Read current latest manifest
+    current_latest = backend.read_json(latest_key)
+
+    # 2. Move latest -> previous
+    if current_latest:
+        backend.write_json(previous_key, current_latest)
+
+    # 3. Write new latest manifest
+    new_manifest = {
+        "version": version,
+        "prefix": staging_prefix,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "validation": validation
+    }
+
+    backend.write_json(latest_key, new_manifest)
+
 
 def naive_publish(backend, dataset_id, local_dataset_dir):
     """
