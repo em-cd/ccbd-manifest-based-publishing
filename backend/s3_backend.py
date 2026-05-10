@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+import json
 import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
@@ -57,6 +57,20 @@ class S3Backend:
       raise RuntimeError(f"Upload failed: {e}")
 
     return os.path.getsize(file_path)
+
+  def write_json(self, key, data):
+      self.s3.put_object(
+          Bucket=self.bucket,
+          Key=key,
+          Body=json.dumps(data, indent=2).encode("utf-8")
+      )
+
+  def read_json(self, key):
+      try:
+          obj = self.s3.get_object(Bucket=self.bucket, Key=key)
+          return json.loads(obj["Body"].read())
+      except self.s3.exceptions.NoSuchKey:
+          return None
   
   def filesystem(self):
     import pyarrow.fs as fs

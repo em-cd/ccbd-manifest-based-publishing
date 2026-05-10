@@ -1,46 +1,38 @@
-import os
 import argparse
-import boto3
 from dataset_gen import generate_dataset
-from upload import upload
+from data_transfer import upload, dataset_exists
+from publish import publish
+from backend.azure_backend import AzureBackend
+from backend.s3_backend import S3Backend
 
-bucket = os.getenv("S3_BUCKET_NAME")
-if not bucket:
-    raise ValueError("S3_BUCKET_NAME environment variable is not set")
+BACKEND_MAP = {
+    "s3": S3Backend,
+    "azure": AzureBackend,
+}
 
-s3 = boto3.client("s3")
-zone = "curated"
-
-# TODO: We only check that the dataset folder is there, we should probably
-# check that it's complete, e.g. by checking that the correct files are there
-# and the amount of data is correct
-def dataset_exists(prefix):
-    resp = s3.list_objects_v2(
-        Bucket=bucket,
-        Prefix=prefix,
-        MaxKeys=1
-    )
-    return "Contents" in resp
-
-def main(size):
+def main(backend_name, size):
     if size == "all":
         sizes = ["S", "M", "L"]
     else:
         sizes = [size]
 
+    backend_cls = BACKEND_MAP[backend_name]
+    backend = backend_cls()
+
     for s in sizes:
-        prefix = f"{zone}/{s}"
+        dataset_id = s
+        version = 'v1'
 
-        if dataset_exists(prefix):
-            print(f"[SKIP] Dataset {s} exists.")
-            continue
+        if dataset_exists(backend, dataset_id, version):
+            print(f"[SKIP DATAGEN] Dataset {s} exists.")
+        else:
+            result = generate_dataset(s)
 
-        result = generate_dataset(s)
-        print(f"\nUploading dataset {s} to S3...")
+            print(f"Uploading dataset {s} to S3...")
+            upload(backend, dataset_id, result["out_path"], version)
 
-        for file_path in result["file_paths"]:
-            key = f"{prefix}/{os.path.basename(file_path)}"
-            upload(file_path, key)
+        print(f"Publishing dataset {s}...")
+        publish(backend, dataset_id, version)
 
         print(f"[DONE] Dataset {s} ready.")
 
@@ -49,6 +41,7 @@ def main(size):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--backend", choices=["s3", "azure"], required=True)
     parser.add_argument(
         "--size",
         choices=["test", "S", "M", "L", "all"],
@@ -57,4 +50,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.size)
+    main(args.backend, args.size)
