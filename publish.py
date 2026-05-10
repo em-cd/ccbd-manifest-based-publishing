@@ -36,7 +36,7 @@ def publish(backend, dataset_id, version):
     :param version (str): Version name (e.g., "v1").
     """
     staging_prefix = f"staging/{dataset_id}/{version}/"
-    published_prefix = f"published/{dataset_id}/{version}/"
+    published_prefix = f"published/{dataset_id}/"
 
     # 1. Validate
     validation = validate_dataset(
