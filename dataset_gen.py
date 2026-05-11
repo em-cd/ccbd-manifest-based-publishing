@@ -117,13 +117,31 @@ MONTHS = [
 # ═══════════════════════════════════════════════════════
 
 SIZES = {
-    "test": 1000,
-    "S": 3_580_000,
-    "M": 17_900_000,
-    "L": 35_800_000
+    "test": {
+      "rows": 1000,
+      "rows_per_file": 500
+    },
+    "demo/v1": {
+      "rows": 3500,
+      "rows_per_file": 500
+    },
+    "demo/v2": {
+      "rows": 5000,
+      "rows_per_file": 1000
+    },
+    "S": {
+      "rows": 3_580_000,
+      "rows_per_file": 1_000_000
+    },
+    "M": {
+      "rows": 17_900_000,
+      "rows_per_file": 1_000_000
+    },
+    "L": {
+      "rows": 35_800_000,
+      "rows_per_file": 1_000_000
+    }
 }
-
-ROWS_PER_FILE = 1_000_000
 
 # ═══════════════════════════════════════════════════════
 # 📖 Diary entry generator
@@ -251,7 +269,8 @@ def generate_batch(num_rows, rng):
 # ═══════════════════════════════════════════════════════
 
 def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
-    total_rows = SIZES[size_label]
+    total_rows = SIZES[size_label]["rows"]
+    rows_per_file = SIZES[size_label]["rows_per_file"]
     out_path = os.path.join(output_dir, size_label)
     os.makedirs(out_path, exist_ok=True)
 
@@ -284,7 +303,7 @@ def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
         )
 
         file_num = max_index + 1
-        rows_written = (len(existing_files) - 1) * ROWS_PER_FILE
+        rows_written = (len(existing_files) - 1) * rows_per_file
 
         # Check last file properly, in case it wasn't full
         last_file = os.path.join(out_path, existing_files[-1])
@@ -294,7 +313,7 @@ def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
         print(f"   Resuming from file index {file_num} ({rows_written} rows already written)")
 
     while rows_written < total_rows:
-        batch_size = min(ROWS_PER_FILE, total_rows - rows_written)
+        batch_size = min(rows_per_file, total_rows - rows_written)
         table = generate_batch(batch_size, rng)
 
         file_path = os.path.join(out_path, f"part-{file_num:04d}.parquet")

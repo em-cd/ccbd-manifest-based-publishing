@@ -17,6 +17,13 @@ class S3Backend:
 
     self.s3 = boto3.client("s3", region_name=self.region)
 
+  def filesystem(self):
+    import pyarrow.fs as fs
+    return fs.S3FileSystem()
+
+  def get_root(self):
+    return self.bucket
+
   def list_objects(self, prefix):
     keys = []
     page_count = 0
@@ -71,10 +78,28 @@ class S3Backend:
           return json.loads(obj["Body"].read())
       except self.s3.exceptions.NoSuchKey:
           return None
-  
-  def filesystem(self):
-    import pyarrow.fs as fs
-    return fs.S3FileSystem()
 
-  def get_root(self):
-    return self.bucket
+  def delete_prefix(self, prefix):
+    """
+    Delete all objects under a prefix.
+    """
+    keys, _ = self.list_objects(prefix)
+
+    if not keys:
+        print(f"No objects found under {prefix}")
+        return 0
+
+    deleted = 0
+
+    for i in range(0, len(keys), 1000):
+        batch = [{"Key": k} for k in keys[i:i+1000]]
+
+        self.s3.delete_objects(
+            Bucket=self.bucket,
+            Delete={"Objects": batch}
+        )
+
+        deleted += len(batch)
+
+    print(f"Deleted {deleted} objects under {prefix}")
+    return deleted

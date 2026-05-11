@@ -22,7 +22,7 @@ DATASET_SCHEMA = {
     "payload": "string",
 }
 
-def publish(backend, dataset_id, version):
+def publish(backend, dataset_id, local_path, version, sleep=0):
     """
     Publish a dataset version using a manifest-based approach, to ensure
     readers always see a consistent dataset version.
@@ -33,18 +33,25 @@ def publish(backend, dataset_id, version):
 
     :param backend: the backend to publish to
     :param dataset_id (str): Dataset identifier.
+    :param local_path (str): Path of dataset to upload.
     :param version (str): Version name (e.g., "v1").
+    :param sleep (float): Time to sleep for during upload (for demo purposes)
     """
+    if version is None:
+        raise("Must provide a version number to publish")
+    # 1. Upload new dataset
+    upload(backend, dataset_id, local_path, version, sleep=sleep)
+
     staging_prefix = f"staging/{dataset_id}/{version}/"
     published_prefix = f"published/{dataset_id}/"
 
-    # 1. Validate
+    # 2. Validate it
     validation = validate_dataset(
             f"{backend.get_root()}/{staging_prefix}",
             filesystem=backend.filesystem()
         )
 
-    # 2. Write manifest
+    # 3. Write manifest
     write_manifest(backend, version, validation, staging_prefix, published_prefix)
 
     print(f"Published {dataset_id} {version} successfully.")
@@ -124,12 +131,11 @@ def write_manifest(backend, version, validation, staging_prefix, published_prefi
 
     backend.write_json(latest_key, new_manifest)
 
-
-def naive_publish(backend, dataset_id):
+def naive_publish(backend, dataset_id, local_path, sleep=0):
     """
     Naive publishing implementation for demo purposes. No manifest,
-    no versioning, just writes to the curated zone. Sleep included
-    to ensure we see inconsistent reads during demo.
+    no versioning, just deletes old version then writes to the curated
+    zone. Sleep included to ensure we see inconsistent reads during demo.
     """
-    local_dataset_dir = f"data/{dataset_id}"
-    upload(backend, dataset_id, local_dataset_dir, version=None, zone="curated", sleep=0.5)
+    backend.delete_prefix(f"curated/{dataset_id}/")
+    upload(backend, dataset_id, local_path, version=None, zone="curated", sleep=sleep)
