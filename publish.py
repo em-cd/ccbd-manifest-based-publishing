@@ -1,14 +1,7 @@
 from datetime import datetime, timezone
-from backend.s3_backend import S3Backend
-from backend.azure_backend import AzureBackend
 from data_transfer import upload
 import pyarrow.dataset as ds
 import pyarrow.compute as pc
-
-BACKEND_MAP = {
-    "s3": S3Backend,
-    "azure": AzureBackend,
-}
 
 DATASET_SCHEMA = {
     "ts": "timestamp[us]",
@@ -26,10 +19,6 @@ def publish(backend, dataset_id, local_path, version, sleep=0):
     """
     Publish a dataset version using a manifest-based approach, to ensure
     readers always see a consistent dataset version.
-
-    Validates data in staging/<dataset_id>/<version>/, then updates
-    published/<dataset_id>/latest.json to point to the new version.
-    The previous manifest is saved to previous.json for rollback.
 
     :param backend: the backend to publish to
     :param dataset_id (str): Dataset identifier.
@@ -58,6 +47,9 @@ def publish(backend, dataset_id, local_path, version, sleep=0):
 
 
 def validate_dataset(dataset_path, filesystem):
+    """
+    Validate a dataset in staging. Part of the safe publishing flow.
+    """
     dataset = ds.dataset(dataset_path, format="parquet", filesystem=filesystem)
 
     # Validate schema
@@ -111,6 +103,10 @@ def validate_dataset(dataset_path, filesystem):
     }
 
 def write_manifest(backend, version, validation, staging_prefix, published_prefix):
+    """
+    Write a new manifest for a validated dataset. Part of the safe publishing flow.
+    The previous manifest is saved to previous.json for rollback.
+    """
     latest_key = f"{published_prefix}latest.json"
     previous_key = f"{published_prefix}previous.json"
 
@@ -135,7 +131,8 @@ def naive_publish(backend, dataset_id, local_path, sleep=0):
     """
     Naive publishing implementation for demo purposes. No manifest,
     no versioning, just deletes old version then writes to the curated
-    zone. Sleep included to ensure we see inconsistent reads during demo.
+    zone. Sleep can be included to ensure we see inconsistent reads
+    during demo.
     """
     backend.delete_prefix(f"curated/{dataset_id}/")
     upload(backend, dataset_id, local_path, version=None, zone="curated", sleep=sleep)

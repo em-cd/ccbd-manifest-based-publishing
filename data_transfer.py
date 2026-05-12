@@ -6,8 +6,9 @@ def get_prefix(dataset_id, version=None):
 
 def upload(backend, dataset_id: str, local_dir: str, version: str = None, zone: str="staging", sleep: float = None):
     """
-    Upload a full Parquet dataset folder to staging area. If version is not
-    provided, uploads to bench area.
+    Upload a full Parquet dataset folder to the backend. By default, uploads to
+    staging, but you can also pass a zone to upload to (e.g. curated).
+    Accepts a <sleep> parameter to slow down upload for demo purposes.
     """
     if version is None:
         prefix = f"{zone}/{dataset_id}/"
@@ -27,7 +28,8 @@ def upload(backend, dataset_id: str, local_dir: str, version: str = None, zone: 
 
 def download(backend, dataset_id: str, local_dir: str, version: str = None):
     """
-    Download full dataset version from staging/<dataset_id>/<version>/.
+    Download full dataset from staging/<dataset_id>/<version>/ and saves it to
+    local_dir.
     """
     prefix = get_prefix(dataset_id, version)
     keys, _ = backend.list_objects(prefix)
@@ -40,10 +42,8 @@ def download(backend, dataset_id: str, local_dir: str, version: str = None):
 
     print(f"Downloaded {prefix}")
 
-# TODO: We only check that the dataset folder is there, we should probably
-# check that it's complete, e.g. by checking that the correct files are there
-# and the amount of data is correct
 def dataset_exists(backend, dataset_id: str, version: str = None):
+    """ Check if a dataset is already present in staging area """
     prefix = get_prefix(dataset_id, version)
     keys, _ = backend.list_objects(prefix)
     return len(keys) > 0

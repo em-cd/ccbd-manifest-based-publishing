@@ -6,7 +6,7 @@ from backend.azure_backend import AzureBackend
 from backend.s3_backend import S3Backend
 from dataset_gen import generate_dataset
 from publish import publish, naive_publish
-from reader import read_current_dataset, naive_read_dataset
+from read import read_current_dataset, naive_read_dataset
 
 DATA_DIR = "./data"
 BACKEND_MAP = {
@@ -16,24 +16,6 @@ BACKEND_MAP = {
 
 def get_local_dataset_path(size):
     return f"{DATA_DIR}/{size}"
-
-def run_safe_publish_demo(backend, size):
-    dataset_id = size
-    version = "v1"
-
-    # Generate data if not present
-    local_path = get_local_dataset_path(size)
-    if not (os.path.exists(local_path) and len(os.listdir(local_path)) > 0):
-        local_path = generate_dataset(size)
-
-
-    # Read results
-    table = read_current_dataset(backend, dataset_id)
-
-    return {
-        "rows": table.num_rows,
-        "cols": table.column_names
-    }
 
 def run_publish_demo(backend):
     dataset_id = "demo"
@@ -128,7 +110,6 @@ def main(backend_name):
     backend = backend_cls()
 
     run_publish_demo(backend)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
