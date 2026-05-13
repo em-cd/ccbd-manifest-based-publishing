@@ -27,8 +27,53 @@ BENCH_FUNCS = {
     "upload": lambda b, s: bench_upload(b, s),
     "download": lambda b, s: bench_download(b, s),
     "listing": lambda b, s: bench_listing(b, s),
-    "scan": lambda b, s: bench_scan(b, s, region="Pemberley"),
+    "scan": None, #handled separately with scan presets
     "publish": lambda b, s: bench_publish(b, s),
+}
+
+SCAN_PRESETS = {
+
+    # Region + date range (original benchmark query)
+    "v1": {
+        "region":     "Pemberley",
+        "date_from":  "1812-01-01",
+        "date_to":    "1812-07-01",
+    },
+ 
+    # Event type + date range
+    "v2": {
+        "event_type": "ball_attendance",
+        "date_from":  "1812-06-01",
+        "date_to":    "1812-12-31",
+    },
+ 
+    # Character + region (no date)
+    "v3": {
+        "character":  "Mr. Darcy",
+        "region":     "Pemberley",
+    },
+ 
+    # Mood + event type (high selectivity combo)
+    "v4": {
+        "mood":       "mortified",
+        "event_type": "proposal_rejected",
+    },
+ 
+    # Wide date range only
+    "v5": {
+        "date_from":  "1812-03-01",
+        "date_to":    "1812-09-01",
+    },
+ 
+    # Single region, no date
+    "v6": {
+        "region":     "Longbourn",
+    },
+ 
+    # Single event type only
+    "v7": {
+        "event_type": "dramatic_hand_flex",
+    },
 }
 
 def get_prefix(size):
@@ -105,43 +150,67 @@ def bench_listing(backend, size):
     }
 
 # Parquet scan (analytics query)
-def bench_scan(backend, size, region=None, date_from=None, date_to=None):
+def bench_scan(backend, size, preset_name="v1", region=None, event_type=None,
+               character=None, mood=None, date_from=None, date_to=None):
+ 
     fs = backend.filesystem()
     dataset = ds.dataset(
         f"{backend.get_root()}/bench/{size}/",
         filesystem=fs,
-        format="parquet"
+        format="parquet",
     )
-
-    start = time.perf_counter()
-
+ 
+    # Total rows in dataset before any filtering (approximates rows scanned)
+    total_rows_in_dataset = dataset.count_rows()
+ 
+    # Build filter expression from whichever args are set
     filters = []
     if region:
         filters.append(ds.field("region") == region)
+    if event_type:
+        filters.append(ds.field("event_type") == event_type)
+    if character:
+        filters.append(ds.field("character") == character)
+    if mood:
+        filters.append(ds.field("mood") == mood)
     if date_from:
         filters.append(ds.field("ts") >= datetime.fromisoformat(date_from))
     if date_to:
         filters.append(ds.field("ts") < datetime.fromisoformat(date_to))
-
+ 
     if filters:
         filter_expr = filters[0]
         for f in filters[1:]:
             filter_expr = filter_expr & f
-        table = dataset.to_table(filter=filter_expr)
-    else:
-        table = dataset.to_table()
-
-    result = table.group_by("event_type").aggregate([
+ 
+    # Scan timing (load + filter)
+    scan_start = time.perf_counter()
+    table      = dataset.to_table(filter=filter_expr) if filters else dataset.to_table()
+    scan_ms    = (time.perf_counter() - scan_start) * 1000
+ 
+    # Aggregation timing 
+    agg_start  = time.perf_counter()
+    result     = table.group_by("event_type").aggregate([
         ("value", "count"),
-        ("value", "mean")
+        ("value", "mean"),
     ])
-
-    elapsed_ms = (time.perf_counter() - start) * 1000
-
+    agg_ms     = (time.perf_counter() - agg_start) * 1000
+ 
     return {
-        "elapsed_ms": elapsed_ms,
-        "rows_matched": table.num_rows,
-        "num_groups": result.num_rows,
+        "elapsed_ms":            scan_ms + agg_ms,
+        "scan_ms":               scan_ms,
+        "agg_ms":                agg_ms,
+        "rows_scanned":          total_rows_in_dataset,
+        "rows_matched":          table.num_rows,
+        "num_groups":            result.num_rows,
+        # Which filters were active
+        "preset_name":           preset_name,
+        "filter_region":         region,
+        "filter_event_type":     event_type,
+        "filter_character":      character,
+        "filter_mood":           mood,
+        "filter_date_from":      date_from,
+        "filter_date_to":        date_to,
     }
 
 def bench_publish(backend, size):
@@ -192,11 +261,14 @@ def run_repeated(name, func, num_runs):
 
 def save_results(all_results, output_file="results.csv"):
     fieldnames = [
-        "backend", "size_label", "test_type", "session_ts", "run", "row_count", "object_count", "elapsed_ms", # all benchmarks
-        "total_bytes", "total_mb", "object_size_mb", "throughput_mb_s", # upload/download
-        "list_requests", # listing
-        "rows_matched", "num_groups", # scan
-        "validation_ms", "metadata_ms" # publish
+        "backend", "size_label", "test_type", "session_ts", "run", "row_count",
+        "elapsed_ms",
+        "total_bytes", "total_mb", "object_count", "object_size_mb", "throughput_mb_s",
+        "list_requests",
+        "scan_ms", "agg_ms", "rows_scanned", "rows_matched", "num_groups",
+        "preset_name", "filter_region", "filter_event_type", "filter_character",
+        "filter_mood", "filter_date_from", "filter_date_to",
+        "validation_ms", "metadata_ms",
     ]
 
     file_exists = os.path.exists(output_file)
@@ -235,23 +307,33 @@ def process_results(backend_name, size, test_type, results, session_ts):
             object_size_mb = None
 
         row = {
-            "backend": backend_name,
-            "size_label": size,
-            "test_type": test_type,
-            "session_ts": session_ts,
-            "run": i + 1,
-            "elapsed_ms": elapsed_ms,
-            "total_bytes": total_bytes,
-            "total_mb": total_mb,
-            "throughput_mb_s": throughput_mb_s,
-            "row_count": DATASET_INFO[size]["rows"],
-            "object_count": object_count,
-            "object_size_mb": object_size_mb,
-            "list_requests": r.get("list_requests"),
-            "rows_matched": r.get("rows_matched"),
-            "num_groups": r.get("num_groups"),
-            "validation_ms": r.get("validation_ms"),
-            "metadata_ms": r.get("metadata_ms"),
+            "backend":           backend_name,
+            "size_label":        size,
+            "test_type":         test_type,
+            "session_ts":        session_ts,
+            "run":               i + 1,
+            "row_count":         DATASET_INFO[size]["rows"],
+            "elapsed_ms":        elapsed_ms,
+            "total_bytes":       total_bytes,
+            "total_mb":          total_mb,
+            "throughput_mb_s":   throughput_mb_s,
+            "object_count":      object_count,
+            "object_size_mb":    object_size_mb,
+            "list_requests":     r.get("list_requests"),
+            "scan_ms":           r.get("scan_ms"),
+            "agg_ms":            r.get("agg_ms"),
+            "rows_scanned":      r.get("rows_scanned"),
+            "rows_matched":      r.get("rows_matched"),
+            "num_groups":        r.get("num_groups"),
+            "preset_name":       r.get("preset_name"),
+            "filter_region":     r.get("filter_region"),
+            "filter_event_type": r.get("filter_event_type"),
+            "filter_character":  r.get("filter_character"),
+            "filter_mood":       r.get("filter_mood"),
+            "filter_date_from":  r.get("filter_date_from"),
+            "filter_date_to":    r.get("filter_date_to"),
+            "validation_ms":     r.get("validation_ms"),
+            "metadata_ms":       r.get("metadata_ms"),
         }
 
         rows.append(row)
@@ -270,30 +352,29 @@ if __name__ == "__main__":
         default=["all"],
         help="Which benchmarks to run"
     )
+    parser.add_argument(
+        "--query",
+        nargs="+",
+        choices=list(SCAN_PRESETS) + ["all"],
+        default=["v1"],
+        help="Scan query preset(s) to run. Use 'all' to run every preset.",
+    )
     parser.add_argument("--runs", type=int, default=NUM_RUNS, help="Number of runs per benchmark")
-    parser.add_argument("--region", default="Pemberley")
-    parser.add_argument("--date-from", default=None)
-    parser.add_argument("--date-to", default=None)
     parser.add_argument("--output", default="results.csv")
     args = parser.parse_args()
 
-    if args.size == "all":
-        sizes = ["S", "M", "L"]
-    else:
-        sizes = [args.size]
-
+    sizes    = ["S", "M", "L"] if args.size == "all" else [args.size]
     backends = list(BACKEND_MAP) if args.backend == "all" else [args.backend]
 
-    selected_tests = args.tests
-    if "all" in selected_tests:
-        selected_tests = list(BENCH_FUNCS)
+    selected_tests   = list(BENCH_FUNCS) if "all" in args.tests else args.tests
+    selected_presets = list(SCAN_PRESETS) if "all" in args.query else args.query
 
-    # Run the benchmarks
-    session_ts = datetime.now(timezone.utc).isoformat()
+    session_ts  = datetime.now(timezone.utc).isoformat()
     all_results = []
+
     for backend_name in backends:
         backend_cls = BACKEND_MAP[backend_name]
-        backend = backend_cls()
+        backend     = backend_cls()
 
         for size in sizes:
             print(f"\n{'═' * 50}")
@@ -306,13 +387,35 @@ if __name__ == "__main__":
                 if test not in BENCH_FUNCS:
                     continue
 
-                results = run_repeated(
-                    test,
-                    lambda t=test: BENCH_FUNCS[t](backend, size),
-                    args.runs
-                )
-
-                all_results.extend(process_results(backend_name, size, test, results, session_ts))
+                if test == "scan":
+                    for preset_name in selected_presets:
+                        filters = SCAN_PRESETS[preset_name]
+                        results = run_repeated(
+                            f"scan/{preset_name}",
+                            lambda p=preset_name, f=filters: bench_scan(
+                                backend, size,
+                                preset_name=p,
+                                region=f.get("region"),
+                                event_type=f.get("event_type"),
+                                character=f.get("character"),
+                                mood=f.get("mood"),
+                                date_from=f.get("date_from"),
+                                date_to=f.get("date_to"),
+                            ),
+                            args.runs,
+                        )
+                        all_results.extend(
+                            process_results(backend_name, size, f"scan/{preset_name}", results, session_ts)
+                        )
+                else:
+                    results = run_repeated(
+                        test,
+                        lambda t=test: BENCH_FUNCS[t](backend, size),
+                        args.runs,
+                    )
+                    all_results.extend(
+                        process_results(backend_name, size, test, results, session_ts)
+                    )
 
     save_results(all_results, args.output)
     print("\n✅ All benchmarks complete!")
