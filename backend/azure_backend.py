@@ -19,13 +19,12 @@ class AzureBackend:
       raise ValueError("Azure container missing in .env")
 
     blob_service = BlobServiceClient(
-      account_url=f"https://{self.account}.blob.core.windows.net",
-      credential=self.key,
-      max_block_size=4 * 1024 * 1024,        # 4 MB chunks (default is 4MB)
-      max_single_put_size=8 * 1024 * 1024,    # Files under 8MB upload in one shot
-      max_page_size=4 * 1024 * 1024,
-      connection_timeout=300,
-      read_timeout=300,
+        account_url=f"https://{self.account}.blob.core.windows.net",
+        credential=self.key,
+        max_block_size=8 * 1024 * 1024,       # 8 MB to match S3 multipart_chunksize
+        max_single_put_size=8 * 1024 * 1024,  # 8 MB to match S3 multipart_threshold
+        connection_timeout=300,
+        read_timeout=300,
     )
 
     self.container_client = blob_service.get_container_client(self.container)
@@ -56,8 +55,7 @@ class AzureBackend:
 
     try:
       with open(local_path, "wb") as f:
-        stream = blob_client.download_blob()
-        f.write(stream.readall())
+        stream = blob_client.download_blob(max_concurrency=10) #match 10 concurrent threads in aws
     except AzureError as e:
       raise RuntimeError(f"Download failed: {e}")
 
@@ -74,7 +72,7 @@ class AzureBackend:
 
     try:
       with open(file_path, "rb") as f:
-        blob_client.upload_blob(f, overwrite=True)
+        blob_client.upload_blob(f, overwrite=True, max_concurrency=10) #match 10 concurrent threads in aws
     except AzureError as e:
       raise RuntimeError(f"Upload failed: {e}")
    
