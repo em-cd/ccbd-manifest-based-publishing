@@ -1,4 +1,7 @@
-# Cloud Computing & Big Data Project: S3 Data Lake Benchmarking Harness & Manifest-Based Publishing
+# Cloud Computing & Big Data Project
+## S3 Data Lake Benchmarking Harness & Manifest-Based Publishing
+
+----
 
 ## Overview
 
@@ -24,7 +27,7 @@ Used only for benchmarking.
 
 ### Dataset publishing
 
-#### Staging (input datasets)
+#### Staging (versioned datasets)
 
 ```
 s3://bucket/staging/<dataset_id>/<version>/
@@ -48,13 +51,15 @@ Contains:
 
 Create a `.env` file with the following variables:
 
-- AWS_DEFAULT_REGION: AWS region (e.g. eu-central-1)
-- AWS_ACCESS_KEY_ID: IAM user access key
-- AWS_SECRET_ACCESS_KEY: IAM user secret key
-- S3_BUCKET_NAME: target S3 bucket
+- `AWS_DEFAULT_REGION`: AWS region (e.g. eu-central-1)
+- `AWS_ACCESS_KEY_ID`: IAM user access key
+- `AWS_SECRET_ACCESS_KEY`: IAM user secret key
+- `S3_BUCKET_NAME`: target S3 bucket
+- `AZURE_STORAGE_ACCOUNT`: storage account name for Azure
+- `AZURE_STORAGE_KEY`: storage key for Azure account (can be an account key or a SAS token)
+- `AZURE_CONTAINER`: target Azure Blob Storage container
 
-The benchmark assumes AWS credentials are already configured via environment variables or IAM role.
-
+You can configure the benchmark harness and publishing demos to use either AWS S3 or Azure Blob Storage. If you only use one provider, you only need to set the corresponding credentials and can leave out the other.
 
 ## Generating datasets
 
