@@ -25,6 +25,9 @@ class S3Backend:
     return self.bucket
 
   def list_objects(self, prefix):
+    """
+    List objects and page count
+    """
     keys = []
     page_count = 0
 
@@ -38,6 +41,9 @@ class S3Backend:
     return keys, page_count
 
   def download_file(self, local_path: str, key: str = None):
+    """
+    Download a single file from S3 object store
+    """
     if not key:
       key = os.path.basename(local_path)
 
@@ -52,6 +58,9 @@ class S3Backend:
     return os.path.getsize(local_path)
  
   def upload_file(self, file_path: str, key: str = None):
+    """
+    Upload a single file to an S3 bucket
+    """
     if not os.path.exists(file_path):
       raise FileNotFoundError(f"{file_path} does not exist")
 
@@ -65,21 +74,27 @@ class S3Backend:
 
     return os.path.getsize(file_path)
 
-  def write_json(self, key, data):
-      self.s3.put_object(
-          Bucket=self.bucket,
-          Key=key,
-          Body=json.dumps(data, indent=2).encode("utf-8")
-      )
+  def write_json(self, key: str, data: dict):
+    """
+    Write a Python dict as JSON to AWS S3.
+    """
+    self.s3.put_object(
+        Bucket=self.bucket,
+        Key=key,
+        Body=json.dumps(data, indent=2).encode("utf-8")
+    )
 
-  def read_json(self, key):
-      try:
-          obj = self.s3.get_object(Bucket=self.bucket, Key=key)
-          return json.loads(obj["Body"].read())
-      except self.s3.exceptions.NoSuchKey:
-          return None
+  def read_json(self, key: str):
+    """
+    Read JSON blob and return as dict. Returns None if not found.
+    """
+    try:
+        obj = self.s3.get_object(Bucket=self.bucket, Key=key)
+        return json.loads(obj["Body"].read())
+    except self.s3.exceptions.NoSuchKey:
+        return None
 
-  def delete_prefix(self, prefix):
+  def delete_prefix(self, prefix: str):
     """
     Delete all objects under a prefix.
     """

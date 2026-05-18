@@ -1,6 +1,7 @@
 import os
+import json
 from azure.storage.blob import BlobServiceClient
-from azure.core.exceptions import AzureError
+from azure.core.exceptions import AzureError, ResourceNotFoundError
 from dotenv import load_dotenv
 
 # Load .env into environment variables
@@ -29,7 +30,20 @@ class AzureBackend:
 
     self.container_client = blob_service.get_container_client(self.container)
 
+  def filesystem(self):
+    from adlfs import AzureBlobFileSystem
+    return AzureBlobFileSystem(
+      account_name=self.account,
+      account_key=self.key
+    )
+
+  def get_root(self):
+    return self.container
+
   def list_objects(self, prefix):
+    """
+    List objects and page count in blob storage
+    """
     keys = []
     page_count = 0
 
@@ -45,6 +59,9 @@ class AzureBackend:
     return keys, page_count
 
   def download_file(self, local_path: str, key: str = None):
+    """
+    Download a single file from blob storage
+    """
     if not key:
         key = os.path.basename(local_path)
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
@@ -56,8 +73,11 @@ class AzureBackend:
     except AzureError as e:
         raise RuntimeError(f"Download failed: {e}")
     return os.path.getsize(local_path)
- 
+
   def upload_file(self, file_path: str, key: str = None):
+    """
+    Upload a single file to blob storage
+    """
     if not os.path.exists(file_path):
       raise FileNotFoundError(f"{file_path} does not exist")
 
@@ -74,12 +94,56 @@ class AzureBackend:
    
     return os.path.getsize(file_path)
 
-  def filesystem(self):
-    from adlfs import AzureBlobFileSystem
-    return AzureBlobFileSystem(
-      account_name=self.account,
-      account_key=self.key
-    )
-  
-  def get_root(self):
-    return self.container
+  def write_json(self, key: str, data: dict):
+    """
+    Write a Python dict as JSON to Azure Blob Storage.
+    """
+    blob_client = self.container_client.get_blob_client(key)
+
+    try:
+        payload = json.dumps(data, indent=2).encode("utf-8")
+        blob_client.upload_blob(payload, overwrite=True)
+    except AzureError as e:
+        raise RuntimeError(f"write_json failed: {e}")
+
+  def read_json(self, key: str):
+      """
+      Read JSON blob and return as dict. Returns None if not found.
+      """
+      blob_client = self.container_client.get_blob_client(key)
+
+      try:
+          stream = blob_client.download_blob()
+          data = stream.readall()
+          return json.loads(data.decode("utf-8"))
+      except ResourceNotFoundError:
+          return None
+      except AzureError as e:
+          raise RuntimeError(f"read_json failed: {e}")
+
+  def delete_prefix(self, prefix: str):
+      """
+      Delete all blobs under a prefix.
+      """
+      keys, _ = self.list_objects(prefix)
+
+      if not keys:
+          print(f"No objects found under {prefix}")
+          return 0
+
+      deleted = 0
+
+      # Azure allows batch deletion (up to ~256–1000 depending on SDK version)
+      batch_size = 256
+
+      for i in range(0, len(keys), batch_size):
+          batch = keys[i:i + batch_size]
+
+          try:
+              self.container_client.delete_blobs(*batch)
+              deleted += len(batch)
+          except AzureError as e:
+              raise RuntimeError(f"delete_prefix failed: {e}")
+
+      print(f"Deleted {deleted} objects under {prefix}")
+      return deleted
