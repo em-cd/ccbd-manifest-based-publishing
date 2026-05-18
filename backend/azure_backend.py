@@ -23,8 +23,8 @@ class AzureBackend:
         credential=self.key,
         max_block_size=8 * 1024 * 1024,       # 8 MB to match S3 multipart_chunksize
         max_single_put_size=8 * 1024 * 1024,  # 8 MB to match S3 multipart_threshold
-        connection_timeout=300,
-        read_timeout=300,
+        connection_timeout=600,
+        read_timeout=600,
     )
 
     self.container_client = blob_service.get_container_client(self.container)
@@ -46,19 +46,15 @@ class AzureBackend:
 
   def download_file(self, local_path: str, key: str = None):
     if not key:
-      key = os.path.basename(local_path)
-
-    # Ensure local directory exists
+        key = os.path.basename(local_path)
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
-
     blob_client = self.container_client.get_blob_client(key)
-
     try:
-      with open(local_path, "wb") as f:
-        stream = blob_client.download_blob(max_concurrency=10) #match 10 concurrent threads in aws
+        with open(local_path, "wb") as f:
+            stream = blob_client.download_blob(max_concurrency=10)
+            f.write(stream.readall())  
     except AzureError as e:
-      raise RuntimeError(f"Download failed: {e}")
-
+        raise RuntimeError(f"Download failed: {e}")
     return os.path.getsize(local_path)
  
   def upload_file(self, file_path: str, key: str = None):

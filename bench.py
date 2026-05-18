@@ -387,6 +387,10 @@ if __name__ == "__main__":
                 if test not in BENCH_FUNCS:
                     continue
 
+                if test == "publish" and backend_name == "azure":
+                    print(f"\n── publish (skipped for azure) ──")
+                    continue
+
                 if test == "scan":
                     for preset_name in selected_presets:
                         filters = SCAN_PRESETS[preset_name]
