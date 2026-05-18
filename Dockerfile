@@ -9,4 +9,7 @@ RUN pip install -r requirements.txt
 # Copy the rest of the app
 COPY . .
 
-CMD ["python", "-u", "pipeline.py"]
+ENTRYPOINT ["python", "-u"]
+
+# Default command
+CMD ["demo.py"]
