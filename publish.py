@@ -55,7 +55,7 @@ def validate_dataset(dataset_path, filesystem):
     # Validate schema
     schema = dataset.schema
     actual_columns = set(schema.names)
-    missing = DATASET_SCHEMA.keys() - actual_columns
+    missing = set(DATASET_SCHEMA.keys()) - actual_columns
     if missing:
         raise ValueError(f"Missing columns: {missing}")
 
@@ -71,8 +71,8 @@ def validate_dataset(dataset_path, filesystem):
     ts_col = table.column("ts")
     min_ts = pc.min(ts_col).as_py()
     max_ts = pc.max(ts_col).as_py()
-    if min_ts > max_ts:
-        raise ValueError("Invalid timestamp range")
+    if min_ts is None or max_ts is None:
+        raise ValueError("Missing timestamps")
 
     # Validate values & compute stats
     value_col = table.column("value")
