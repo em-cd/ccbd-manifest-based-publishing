@@ -3,47 +3,20 @@
 
 ## Overview
 
-This project consists of two main components:
+This project implements a benchmark framework for evaluating safe dataset publishing and object storage performance in cloud data lake environments. It compares a naive overwrite approach with a manifest-based publishing strategy that enables atomic dataset versioning across object storage backends.
 
-1. A cloud storage benchmarking harness for data lake operations on Amazon S3 and Azure Blob Storage
-2. A manifest-based dataset publishing system for safe, versioned data release
-
-The system is designed to evaluate performance across multiple dataset sizes (S, M, L) and provide reproducible measurements for ingestion, analytical querying, and publishing workflows across different object storage backends.
-
+The system generates synthetic Parquet datasets at multiple scales and benchmarks upload, download, listing, scan, and publishing workflows, including analytical queries with configurable predicates. Results are logged in CSV format and analysed in Python notebooks to study throughput, query performance, and publishing behaviour.
 
 ## Storage Layout
 
 The system supports both Amazon S3 and Azure Blob Storage backends with identical logical namespace structures.
 
-### Benchmark data
-
-```
-<backend>://<container>/bench/<dataset_id>/
-```
-
-Used only for benchmarking.
-
-### Dataset publishing
-
-#### Staging (versioned datasets)
-
-```
-<backend>://<container>/staging/<dataset_id>/<version>/
-```
-
-New dataset versions are uploaded and validated here.
-
-#### Published (active dataset pointer)
-
-```
-<backend>://<container>/published/<dataset_id>/
-```
-
-Contains only dataset manifests:
-
-- `latest.json`: pointer to the currently active dataset version
-- `previous.json`: pointer to the last published dataset version, for rollback
-
+| Area                                   | Path                                                      | Description                                                                                       |
+| -------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Bench**                              | `<backend>://<container>/bench/<dataset_id>/`             | Used only for benchmarking workloads                                                              |
+| **Staging**                            | `<backend>://<container>/staging/<dataset_id>/<version>/` | Versioned datasets are uploaded and validated here before publication                           |
+| **Published**                          | `<backend>://<container>/published/<dataset_id>/`         | Contains only manifest files defining the active dataset version (`latest.json`, `previous.json`) |
+| **Curated**                            | `<backend>://<container>/curated/`                        | Direct overwrite-based publishing without versioning                                              |
 
 ## Configuration
 
@@ -107,3 +80,17 @@ Scan benchmarks simulate different analytical access patterns:
 - `v7`: Event type only filter
 
 These presets are used to evaluate how filter selectivity impacts scan and aggregation performance.
+
+## 📝 Publishing modes demonstration
+
+To run the demo comparing naive overwrite publishing to manifest-based publishing on S3, run:
+
+```bash
+docker run --env-file .env ccbd-project:latest demo.py --backend s3
+```
+
+You can also use Azure by passing in `--backend azure`.
+
+The demo generates two versions of a small dataset and runs a concurrent workload consisting of one writer thread and three reader threads. The writer publishes an initial version and then updates it to a second version, while readers continuously attempt to access the dataset during the update process.
+
+In the naive overwrite mode, readers may observe partial or inconsistent dataset states due to files being replaced in-place. In the manifest-based mode, readers always resolve the dataset through a manifest pointer, ensuring they see either the old or new version, but never a mixed state.

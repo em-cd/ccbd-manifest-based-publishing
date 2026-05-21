@@ -392,8 +392,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--size",
-        choices=["S", "M", "L", "test"],
-        default="test",
+        choices=["S", "M", "L", "test", "all"],
+        default="all",
         help="Dataset size: test (1K rows), S (~1GB), M (~5GB), L (~15GB)"
     )
     parser.add_argument(
@@ -403,4 +403,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    generate_dataset(args.size, args.output)
+    sizes = ["S", "M", "L"] if args.size == "all" else [args.size]
+
+    for size in sizes:
+        generate_dataset(size, args.output)

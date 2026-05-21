@@ -10,6 +10,3 @@ RUN pip install -r requirements.txt
 COPY . .
 
 ENTRYPOINT ["python", "-u"]
-
-# Default command
-CMD ["demo.py"]

@@ -343,8 +343,8 @@ def process_results(backend_name, size, test_type, results, session_ts):
 # Main
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="📊 Benchmark Harness")
-    parser.add_argument("--size", choices=["test", "S", "M", "L", "all"], required=True)
-    parser.add_argument("--backend", choices=["s3", "azure", "all"], required=True)
+    parser.add_argument("--size", choices=["test", "S", "M", "L", "all"], default="all")
+    parser.add_argument("--backend", choices=["s3", "azure", "all"], default="all")
     parser.add_argument(
         "--tests",
         nargs="+",
