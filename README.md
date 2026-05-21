@@ -86,7 +86,7 @@ Scan benchmarks simulate different analytical access patterns:
 
 These presets are used to evaluate how filter selectivity impacts scan and aggregation performance.
 
-## 📝 Publishing modes demonstration
+## 📝 Publishing Modes Demonstration
 
 To run the demo comparing naive overwrite publishing to manifest-based publishing on S3, run:
 
