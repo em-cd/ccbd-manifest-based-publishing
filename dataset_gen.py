@@ -11,7 +11,7 @@ SEED = 1813  # Year Pride and Prejudice was published
 DEFAULT_OUTPUT_DIR = "./data"
 
 # ═══════════════════════════════════════════════════════
-# 📜 Pride and Prejudice: The Social Season Dataset
+# Pride and Prejudice: The Social Season Dataset
 # ═══════════════════════════════════════════════════════
 
 CHARACTERS = [
@@ -55,7 +55,7 @@ MOODS = [
 ]
 
 # ═══════════════════════════════════════════════════════
-# 📝 Diary entry building blocks
+# Diary entry building blocks
 # ═══════════════════════════════════════════════════════
 
 STARTERS = [
@@ -144,7 +144,7 @@ SIZES = {
 }
 
 # ═══════════════════════════════════════════════════════
-# 📖 Diary entry generator
+# Diary entry generator
 # ═══════════════════════════════════════════════════════
 
 def generate_diary_entry(rng):
@@ -176,7 +176,7 @@ def generate_diary_entry(rng):
 
 
 # ═══════════════════════════════════════════════════════
-# 🎲 Batch generator
+# Batch generator
 # ═══════════════════════════════════════════════════════
 
 def generate_batch(num_rows, rng):
@@ -265,7 +265,7 @@ def generate_batch(num_rows, rng):
 
 
 # ═══════════════════════════════════════════════════════
-# 💾 Dataset writer
+# Dataset writer
 # ═══════════════════════════════════════════════════════
 
 def generate_dataset(size_label, output_dir=DEFAULT_OUTPUT_DIR):
@@ -383,7 +383,7 @@ def print_test_stats(file_path):
 
 
 # ═══════════════════════════════════════════════════════
-# 🚀 Main
+# Main
 # ═══════════════════════════════════════════════════════
 
 if __name__ == "__main__":

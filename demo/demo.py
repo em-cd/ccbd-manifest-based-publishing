@@ -10,7 +10,7 @@ from dataset_gen import generate_dataset
 from publish import publish, naive_publish
 from read import read_current_dataset, naive_read_dataset
 
-from demo_viz import generate_demo_viz
+from demo.demo_viz import generate_demo_viz
 
 
 DATA_DIR = "./data"
@@ -33,10 +33,7 @@ def run_publish_demo(backend):
         "safe_rows": [],
         "naive_rows": []
     }
-
-    # ─────────────────────────────────────────────────────────────
     # Writer
-    # ─────────────────────────────────────────────────────────────
     def writer(local_path, safe=True, version=None, sleep=0.5):
 
         if safe:
@@ -56,9 +53,7 @@ def run_publish_demo(backend):
                 sleep=sleep
             )
 
-    # ─────────────────────────────────────────────────────────────
     # Reader
-    # ─────────────────────────────────────────────────────────────
     def reader(safe=True, sleep=0.2):
 
         time.sleep(sleep)
@@ -99,9 +94,7 @@ def run_publish_demo(backend):
                 f"READ FAILED at t={sleep:.1f}s -> {str(e)}"
             )
 
-    # ─────────────────────────────────────────────────────────────
     # Generate datasets if missing
-    # ─────────────────────────────────────────────────────────────
     for version in ["v1", "v2"]:
 
         size_for_gen = f"{dataset_id}/{version}"
@@ -117,9 +110,7 @@ def run_publish_demo(backend):
     v1_local_path = get_local_dataset_path(f"{dataset_id}/v1")
     v2_local_path = get_local_dataset_path(f"{dataset_id}/v2")
 
-    # ─────────────────────────────────────────────────────────────
     # Publish v1 first
-    # ─────────────────────────────────────────────────────────────
     print(f"\n{'=' * 60}")
     print("INITIAL PUBLISH OF v1")
     print(f"{'=' * 60}\n")
@@ -131,9 +122,7 @@ def run_publish_demo(backend):
     reader(True, 0)
     reader(False, 0)
 
-    # ─────────────────────────────────────────────────────────────
     # SAFE DEMO
-    # ─────────────────────────────────────────────────────────────
     print(f"\n{'=' * 60}")
     print("SAFE MANIFEST-BASED PUBLISHING")
     print(f"{'=' * 60}\n")
@@ -169,9 +158,7 @@ def run_publish_demo(backend):
     # final stable read
     reader(True, 3.8)
 
-    # ─────────────────────────────────────────────────────────────
     # NAIVE DEMO
-    # ─────────────────────────────────────────────────────────────
     print(f"\n{'=' * 60}")
     print("NAIVE OVERWRITE PUBLISHING")
     print(f"{'=' * 60}\n")
@@ -207,9 +194,7 @@ def run_publish_demo(backend):
     # final stable read
     reader(False, 3.8)
 
-    # ─────────────────────────────────────────────────────────────
     # Visualization
-    # ─────────────────────────────────────────────────────────────
     print(f"\n{'=' * 60}")
     print("GENERATING VISUALIZATION")
     print(f"{'=' * 60}\n")
