@@ -34,17 +34,22 @@ You can configure the benchmark harness and publishing demos to use either AWS S
 
 ## Generating Datasets
 
-This project uses Docker. If you have Docker installed, open a terminal and from within the project directory run the following commands to build the image and generate the datasets:
+This project uses Docker Compose. If you have it installed, open a terminal and from within the project directory run the following commands to build the image:
 
 ```bash
-docker build -t ccbd-project .
-docker run ccbd-project:latest dataset_gen.py
+docker compose build
+```
+
+Then you can generate the datasets with:
+
+```bash
+docker compose run dataset_gen
 ```
 
 By default this will generate the small, medium and large datasets and store them locally under `./data/`. To generate a specific size dataset, you can do the following:
 
 ```bash
-docker run ccbd-project:latest dataset_gen.py --size S
+docker compose run dataset_gen --size S
 ```
 
 The supported dataset sizes are **S** (~1GB), **M** (~5GB), **L** (~10GB) and **test** (~283K, for debugging purposes).
@@ -55,7 +60,7 @@ The supported dataset sizes are **S** (~1GB), **M** (~5GB), **L** (~10GB) and **
 Run a full benchmark suite:
 
 ```bash
-docker run --env-file .env ccbd-project:latest bench.py
+docker compose run bench
 ```
 
 ### CLI options:
@@ -86,11 +91,12 @@ These presets are used to evaluate how filter selectivity impacts scan and aggre
 To run the demo comparing naive overwrite publishing to manifest-based publishing on S3, run:
 
 ```bash
-docker run --env-file .env ccbd-project:latest demo.py --backend s3
+docker compose run demo --backend=s3
 ```
-
 You can also use Azure by passing in `--backend azure`.
 
 The demo generates two versions of a small dataset and runs a concurrent workload consisting of one writer thread and three reader threads. The writer publishes an initial version and then updates it to a second version, while readers continuously attempt to access the dataset during the update process.
 
 In the naive overwrite mode, readers may observe partial or inconsistent dataset states due to files being replaced in-place. In the manifest-based mode, readers always resolve the dataset through a manifest pointer, ensuring they see either the old or new version, but never a mixed state.
+
+Results are printed to the terminal, and a visualisation comparing both publishing modes is written to `results/demo_results.png`.

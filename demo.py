@@ -2,16 +2,12 @@ import argparse
 import os
 import threading
 import time
-
 from backend.azure_backend import AzureBackend
 from backend.s3_backend import S3Backend
-
 from dataset_gen import generate_dataset
 from publish import publish, naive_publish
 from read import read_current_dataset, naive_read_dataset
-
-from demo.demo_viz import generate_demo_viz
-
+from demo_viz import generate_demo_viz
 
 DATA_DIR = "./data"
 
@@ -20,13 +16,10 @@ BACKEND_MAP = {
     "azure": AzureBackend,
 }
 
-
 def get_local_dataset_path(size):
     return f"{DATA_DIR}/{size}"
 
-
 def run_publish_demo(backend):
-
     dataset_id = "demo"
 
     result = {
@@ -35,7 +28,6 @@ def run_publish_demo(backend):
     }
     # Writer
     def writer(local_path, safe=True, version=None, sleep=0.5):
-
         if safe:
             publish(
                 backend,
@@ -44,7 +36,6 @@ def run_publish_demo(backend):
                 version,
                 sleep=sleep
             )
-
         else:
             naive_publish(
                 backend,
@@ -55,40 +46,31 @@ def run_publish_demo(backend):
 
     # Reader
     def reader(safe=True, sleep=0.2):
-
         time.sleep(sleep)
 
         try:
-
             if safe:
                 table = read_current_dataset(backend, dataset_id)
                 rows = table.num_rows
-
                 result["safe_rows"].append(rows)
-
                 print(
                     f"[SAFE ] read at t={sleep:.1f}s "
                     f"-> {rows:,} rows"
                 )
-
             else:
                 table = naive_read_dataset(backend, dataset_id)
                 rows = table.num_rows
-
                 result["naive_rows"].append(rows)
-
                 print(
                     f"[NAIVE] read at t={sleep:.1f}s "
                     f"-> {rows:,} rows"
                 )
 
         except Exception as e:
-
             if safe:
                 result["safe_rows"].append(0)
             else:
                 result["naive_rows"].append(0)
-
             print(
                 f"[{'SAFE ' if safe else 'NAIVE'}] "
                 f"READ FAILED at t={sleep:.1f}s -> {str(e)}"
@@ -111,9 +93,9 @@ def run_publish_demo(backend):
     v2_local_path = get_local_dataset_path(f"{dataset_id}/v2")
 
     # Publish v1 first
-    print(f"\n{'=' * 60}")
+    print(f"\n{'=' * 65}")
     print("INITIAL PUBLISH OF v1")
-    print(f"{'=' * 60}\n")
+    print(f"{'=' * 65}\n")
 
     writer(v1_local_path, safe=True, version="v1")
     writer(v1_local_path, safe=False)
@@ -123,9 +105,9 @@ def run_publish_demo(backend):
     reader(False, 0)
 
     # SAFE DEMO
-    print(f"\n{'=' * 60}")
+    print(f"\n{'=' * 65}")
     print("SAFE MANIFEST-BASED PUBLISHING")
-    print(f"{'=' * 60}\n")
+    print(f"{'=' * 65}\n")
 
     safe_threads = [
         threading.Thread(
@@ -159,9 +141,9 @@ def run_publish_demo(backend):
     reader(True, 3.8)
 
     # NAIVE DEMO
-    print(f"\n{'=' * 60}")
+    print(f"\n{'=' * 65}")
     print("NAIVE OVERWRITE PUBLISHING")
-    print(f"{'=' * 60}\n")
+    print(f"{'=' * 65}\n")
 
     naive_threads = [
         threading.Thread(
@@ -195,38 +177,31 @@ def run_publish_demo(backend):
     reader(False, 3.8)
 
     # Visualization
-    print(f"\n{'=' * 60}")
+    print(f"\n{'=' * 65}")
     print("GENERATING VISUALIZATION")
-    print(f"{'=' * 60}\n")
+    print(f"{'=' * 65}\n")
 
     print(result)
 
     generate_demo_viz(result)
 
-    print(f"\n{'=' * 60}")
+    print(f"\n{'=' * 65}")
     print("END DEMO")
-    print(f"{'=' * 60}\n")
+    print(f"{'=' * 65}\n")
 
 
 def main(backend_name):
-
     backend_cls = BACKEND_MAP[backend_name]
-
     backend = backend_cls()
-
     run_publish_demo(backend)
 
-
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
-
     parser.add_argument(
         "--backend",
         choices=["s3", "azure"],
         required=True
     )
-
     args = parser.parse_args()
 
     main(args.backend)

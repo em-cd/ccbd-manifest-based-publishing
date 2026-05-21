@@ -27,7 +27,7 @@ def generate_demo_viz(result):
     CREAM      = '#FAF4E8'
 
     plt.rcParams.update({
-        'font.family':      'Georgia',
+        'font.family':      'DejaVu Serif',
         'figure.facecolor': PARCHMENT,
         'axes.facecolor':   CREAM,
         'text.color':       INK,
@@ -236,7 +236,7 @@ def generate_demo_viz(result):
                  ha='center', va='center', fontsize=9.5,
                  color=SEPIA, style='italic', transform=ax_cost.transAxes)
 
-    plt.savefig('demo_results.png', dpi=150, bbox_inches='tight',
+    plt.savefig('results/demo_results.png', dpi=150, bbox_inches='tight',
                 facecolor=PARCHMENT)
     plt.close()
     print("\n📊 Visualization saved to demo_results.png")

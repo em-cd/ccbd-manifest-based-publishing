@@ -1,0 +1,23 @@
+services:
+  dataset_gen:
+    build: .
+    volumes:
+      - ccbd-data:/app/data
+    entrypoint: ["python", "dataset_gen.py"]
+
+  bench:
+    build: .
+    env_file: .env
+    volumes:
+      - ccbd-data:/app/data
+    entrypoint: ["python", "bench.py"]
+
+  demo:
+    build: .
+    env_file: .env
+    volumes:
+      - ./results:/app/results
+    entrypoint: ["python", "demo.py"]
+
+volumes:
+  ccbd-data:

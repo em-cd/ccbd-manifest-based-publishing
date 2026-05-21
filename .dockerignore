@@ -19,3 +19,4 @@ venv/
 # local data
 data/
 *.parquet
+results/*
