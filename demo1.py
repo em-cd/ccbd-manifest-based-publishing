@@ -444,7 +444,7 @@ def run_publish_demo(backend):
 
     console.print()
     console.print(Align.center(Panel(
-        Text("FIN.", style=f"bold italic {GOLD}", justify="center"),
+        Text("END.", style=f"bold italic {GOLD}", justify="center"),
         box=DOUBLE,
         border_style=GOLD,
         padding=(1, 8),
