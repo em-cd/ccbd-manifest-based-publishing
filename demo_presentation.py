@@ -1,10 +1,10 @@
 """
-demo_presentation.py — Live Manifest-Based Publishing Demo
+demo.py — Live Manifest-Based Publishing Demo
 ==============================================
 
 One command:
-    python3 demo_presentation.py --backend s3
-    python3 demo_presentation.py --backend azure
+    python3 demo.py --backend s3
+    python3 demo.py --backend azure
 
 What happens:
   1. Starts a small Flask server in a background thread (port 5050)
@@ -77,6 +77,35 @@ def top_n(table, column: str, n: int = 3) -> list[dict]:
         return []
 
 
+def _compute_top_events_from_local(local_path: str, n: int = 5) -> list[dict]:
+    """Read a local parquet dataset and return its top-N event_type values.
+    Used to pre-compute what the manifest will (correctly) describe."""
+    try:
+        import pyarrow.dataset as pads
+        table = pads.dataset(local_path, format="parquet").to_table()
+        return top_n(table, "event_type", n)
+    except Exception as e:
+        print(f"  (could not compute top events from {local_path}: {e})")
+        return []
+
+
+def _enrich_manifest(backend, dataset_id: str, top_events: list[dict]) -> None:
+    """Read the just-published manifest, inject the top events from the
+    validation step, and write it back. The audience can then honestly see
+    that the manifest itself carries these aggregates."""
+    if not top_events:
+        return
+    key = f"published/{dataset_id}/latest.json"
+    try:
+        manifest = backend.read_json(key)
+        if manifest is None:
+            return
+        manifest["top_events"] = top_events
+        backend.write_json(key, manifest)
+    except Exception as e:
+        print(f"  (could not enrich manifest at {key}: {e})")
+
+
 def read_with_aggregates(backend, dataset_id, safe: bool) -> dict:
     try:
         table = read_current_dataset(backend, dataset_id) if safe else naive_read_dataset(backend, dataset_id)
@@ -107,6 +136,19 @@ def run_publish_demo(backend, backend_name: str):
     v1_path = f"{DATA_DIR}/{DATASET_ID}/v1"
     v2_path = f"{DATA_DIR}/{DATASET_ID}/v2"
 
+    # Compute top events from the local datasets BEFORE setup — these are what
+    # the manifest will (correctly) describe. Push them to the server so the
+    # sidebar can display them the moment a version becomes active.
+    print("→ Computing manifest aggregates from local datasets…")
+    v1_top_events = _compute_top_events_from_local(v1_path, n=5)
+    v2_top_events = _compute_top_events_from_local(v2_path, n=5)
+    demo_server.set_manifest_top_events("v1", v1_top_events)
+    demo_server.set_manifest_top_events("v2", v2_top_events)
+    if v1_top_events:
+        print(f"  v1 top event: {v1_top_events[0]['value']} ({v1_top_events[0]['count']:,})")
+    if v2_top_events:
+        print(f"  v2 top event: {v2_top_events[0]['value']} ({v2_top_events[0]['count']:,})")
+
     # ── SETUP (synchronous, NO monitor thread yet — avoids race on macOS) ──
     demo_server.set_act("setup")
     print("\n══════════════════════════════════════════════════════════════")
@@ -115,6 +157,7 @@ def run_publish_demo(backend, backend_name: str):
 
     demo_server.set_writer("safe", "publishing", "Publishing v1 baseline via manifest…")
     publish(backend, DATASET_ID, v1_path, "v1", sleep=0)
+    _enrich_manifest(backend, DATASET_ID, v1_top_events)
     demo_server.set_writer("safe", None, "")
 
     demo_server.set_writer("naive", "uploading", "Loading v1 baseline into curated…")
@@ -152,6 +195,7 @@ def run_publish_demo(backend, backend_name: str):
     def safe_writer():
         demo_server.set_writer("safe", "staging", "Mr. Darcy uploads v2 to staging/demo/v2/…")
         publish(backend, DATASET_ID, v2_path, "v2", sleep=0.8)
+        _enrich_manifest(backend, DATASET_ID, v2_top_events)
         demo_server.set_writer("safe", None, "v2 published. The manifest pointer has flipped.")
 
     def safe_reader(r):
@@ -171,7 +215,11 @@ def run_publish_demo(backend, backend_name: str):
 
     # Lady Catherine reads after settled
     safe_reader(FINAL_READER)
-    time.sleep(2.0)  # pause for the audience
+
+    # ── INTERLUDE — give the audience time to digest before Act II ──
+    demo_server.set_act("interlude")
+    print("\n──── Intermission — Act I complete. Wickham approaches… ────")
+    time.sleep(8.0)
 
     # ── ACT II — NAIVE ────────────────────────────────────────────
     demo_server.set_act("naive")
@@ -219,20 +267,26 @@ def run_publish_demo(backend, backend_name: str):
         "safe_reads": sorted(state["reads"]["safe"], key=lambda r: r["time"]),
         "naive_reads": sorted(state["reads"]["naive"], key=lambda r: r["time"]),
     }
-    output_path = generate_html_report(result)
-    print(f"  → {output_path}")
 
-    # Open the persistent report in a new browser tab
-    report_url = f"file://{os.path.abspath(output_path)}"
-    try:
-        webbrowser.open_new_tab(report_url)
-    except Exception:
-        pass
+    # Look for a benchmarks CSV in the usual places
+    bench_csv = None
+    for candidate in ("results.csv", "./results.csv",
+                      "results/results.csv", "./results/results.csv",
+                      "bench/results.csv"):
+        if os.path.exists(candidate):
+            bench_csv = candidate
+            print(f"  benchmarks CSV: {candidate}")
+            break
+    if not bench_csv:
+        print("  (no results.csv found — Benchmarks tab will be skipped)")
+
+    output_path = generate_html_report(result, benchmarks_csv=bench_csv)
+    print(f"  → {output_path}  (saved as backup; live view stays the main attraction)")
 
     print("\n══════════════════════════════════════════════════════════════")
     print("  DEMO COMPLETE — Flask server still running")
-    print(f"  Browser tab:        http://localhost:{PORT}/")
-    print(f"  Persistent report:  {os.path.abspath(output_path)}")
+    print(f"  Live view:          http://localhost:{PORT}/")
+    print(f"  Backup report:      {os.path.abspath(output_path)}")
     print("  Press Ctrl+C in this terminal to stop the server.")
     print("══════════════════════════════════════════════════════════════\n")
 

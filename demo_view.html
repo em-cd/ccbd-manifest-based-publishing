@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --parchment:  #F5ECD7;
@@ -52,18 +53,18 @@
     background: var(--parchment);
     padding: 0 16px;
     color: var(--gold-deep);
-    font-size: 18px;
+    font-size: 24px;
   }
   h1.title {
     font-family: 'IM Fell English SC', serif;
-    font-size: 34px;
+    font-size: 43px;
     margin: 0 0 6px;
     letter-spacing: 0.04em;
   }
   .subtitle {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 16px;
+    font-size: 22px;
     color: var(--sepia);
     margin: 0;
   }
@@ -84,7 +85,7 @@
   }
   .status-pill {
     font-family: 'IM Fell English SC', serif;
-    font-size: 11px;
+    font-size: 17px;
     letter-spacing: 0.2em;
     background: var(--gold);
     color: var(--ink);
@@ -96,16 +97,236 @@
   .status-text {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 17px;
+    font-size: 23px;
     flex: 1;
   }
   .status-meta {
     font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
-    font-size: 11px;
+    font-size: 17px;
     color: var(--gold);
     background: rgba(0,0,0,0.25);
     padding: 4px 10px;
     border-radius: 2px;
+  }
+
+  /* ── Main tabs (Live Demo / Benchmarks) ──────────────── */
+  .main-tabs {
+    max-width: 1280px;
+    margin: 0 auto 22px;
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 0;
+  }
+  .main-tab {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 17px;
+    letter-spacing: 0.18em;
+    padding: 14px 28px;
+    background: transparent;
+    border: 1.5px solid var(--sepia-soft);
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    color: var(--sepia);
+    cursor: pointer;
+    transition: all 180ms ease;
+    margin-bottom: -2px;
+  }
+  .main-tab:hover {
+    background: var(--parchment-2);
+    color: var(--ink);
+  }
+  .main-tab.active {
+    background: var(--ink);
+    color: var(--gold);
+    border-color: var(--ink);
+    border-bottom: 2px solid var(--ink);
+  }
+  .main-tab-content { display: none; }
+  .main-tab-content.active { display: block; }
+
+  /* ── Benchmarks tab cards ────────────────────────────── */
+  .bench-intro {
+    max-width: 1100px;
+    margin: 0 auto 24px;
+    text-align: center;
+  }
+  .bench-h2 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 28px;
+    color: var(--ink);
+    margin: 0 0 10px;
+    letter-spacing: 0.04em;
+  }
+  .bench-p {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--sepia);
+    margin: 0;
+  }
+  .bench-empty {
+    max-width: 800px;
+    margin: 40px auto;
+    text-align: center;
+    padding: 40px;
+    background: var(--cream);
+    border: 1.5px dashed var(--sepia-soft);
+    border-radius: 3px;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--sepia);
+  }
+  .bench-empty h3 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 20px;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+  .bench-empty p { font-size: 18px; }
+  .bench-empty code {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 15px;
+    background: var(--ink);
+    color: var(--gold);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+  /* Two-column grid for benchmark cards */
+  .bench-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 1080px) {
+    .bench-grid { grid-template-columns: 1fr; }
+  }
+  .bench-card {
+    margin: 0;
+    background: var(--cream);
+    border: 1.5px solid var(--sepia-soft);
+    border-top: 5px solid var(--gold);
+    border-radius: 2px;
+    padding: 22px 24px 26px;
+    box-shadow: 0 4px 12px rgba(44,24,16,0.08);
+    display: flex;
+    flex-direction: column;
+  }
+  .bench-h3 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 22px;
+    color: var(--gold-deep);
+    margin: 0 0 8px;
+    letter-spacing: 0.06em;
+  }
+  .bench-finding {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink);
+    margin: 0 0 18px;
+    line-height: 1.5;
+    opacity: 0.9;
+    min-height: 90px;  /* keep card heights roughly aligned in the grid */
+  }
+  .bench-finding strong {
+    font-style: normal;
+    color: var(--gold-deep);
+  }
+  .chart-box {
+    position: relative;
+    height: 320px;
+    background: rgba(255,255,255,0.4);
+    border: 1px dotted var(--sepia-soft);
+    border-radius: 2px;
+    padding: 16px;
+  }
+  .chart-box.tall { height: 420px; }
+  .bench-footer {
+    max-width: 1100px;
+    margin: 30px auto 0;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 16px;
+  }
+  .bench-footer code {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 14px;
+    background: var(--cream);
+    border: 1px solid var(--sepia-soft);
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-style: normal;
+  }
+
+  /* ── End-of-demo view toggle (hidden during acts) ──────── */
+  .end-controls,
+  .intermission-controls {
+    display: none;  /* shown by JS when act state matches */
+    max-width: 1280px;
+    margin: 0 auto 22px;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: var(--cream);
+    border: 1.5px solid var(--gold);
+    border-radius: 2px;
+    flex-wrap: wrap;
+    animation: fade-in 500ms ease;
+  }
+  .intermission-controls {
+    justify-content: center;
+    border-color: var(--gold-deep);
+    background: var(--parchment-2);
+  }
+  .ec-btn.primary {
+    background: var(--ink);
+    color: var(--gold);
+    border-color: var(--ink);
+    font-family: 'IM Fell English SC', serif;
+    font-size: 17px;
+    letter-spacing: 0.16em;
+    padding: 9px 26px;
+    font-weight: 600;
+  }
+  .ec-btn.primary:hover {
+    background: var(--gold-deep);
+    color: var(--cream);
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ec-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    color: var(--sepia);
+    margin-right: 6px;
+  }
+  .ec-btn {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    padding: 7px 18px;
+    background: var(--parchment);
+    color: var(--sepia);
+    border: 1.5px solid var(--sepia-soft);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 180ms ease;
+  }
+  .ec-btn:hover {
+    background: var(--parchment-2);
+    color: var(--ink);
+  }
+  .ec-btn.active {
+    background: var(--ink);
+    color: var(--gold);
+    border-color: var(--ink);
+    font-weight: 600;
   }
 
   /* ── Stage with two libraries ──────────────────────────── */
@@ -138,27 +359,53 @@
   }
   .library-chapter {
     font-family: 'IM Fell English SC', serif;
-    font-size: 12px;
+    font-size: 18px;
     color: var(--gold-deep);
     letter-spacing: 0.22em;
     margin-bottom: 4px;
   }
   .library-title {
     font-family: 'IM Fell English SC', serif;
-    font-size: 22px;
+    font-size: 30px;
     margin: 0 0 4px;
   }
   .library-sub {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     color: var(--sepia);
-    font-size: 14px;
+    font-size: 20px;
+  }
+  /* CCBD function-name banner: the bigger, technical label */
+  .library-method {
+    display: inline-block;
+    margin: 8px auto 6px;
+    padding: 6px 14px;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 18px;
+    letter-spacing: 0.16em;
+    background: var(--sage-bg);
+    color: var(--sage);
+    border: 1.5px solid var(--sage);
+    border-radius: 2px;
+  }
+  .library-method.naive {
+    background: var(--rose-bg);
+    color: var(--rose);
+    border-color: var(--rose);
+  }
+  .library-method code {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 17px;
+    letter-spacing: 0;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 2px;
   }
   .prefix-pill {
     display: inline-block;
     margin-top: 8px;
     font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
-    font-size: 11px;
+    font-size: 17px;
     background: var(--ink);
     color: var(--gold);
     padding: 3px 10px;
@@ -167,19 +414,74 @@
   }
   .library.naive .prefix-pill { color: var(--rose-soft); border-color: var(--rose-soft); }
 
+  /* ── Solo mode: show only one library at a time ──────────
+     Stage transitions during cinematic playback:
+       Act I → only Darcy visible
+       Act II → only Wickham visible
+       Finale → both visible (default) */
+  .stage {
+    transition: grid-template-columns 600ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .stage.solo-safe {
+    grid-template-columns: minmax(0, 1fr) 0 0;
+  }
+  .stage.solo-naive {
+    grid-template-columns: 0 0 minmax(0, 1fr);
+  }
+  .stage.solo-safe .library.naive,
+  .stage.solo-naive .library.safe {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.85);
+    transition: all 500ms cubic-bezier(0.16,1,0.3,1);
+    overflow: hidden;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    visibility: hidden;
+  }
+  .stage.solo-safe .divider,
+  .stage.solo-naive .divider {
+    opacity: 0;
+    width: 0;
+    margin: 0;
+    transition: all 500ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .library {
+    transition: opacity 500ms cubic-bezier(0.16,1,0.3,1),
+                transform 500ms cubic-bezier(0.16,1,0.3,1);
+  }
+
   /* ── Writer status badge ──────────────────────────────── */
   .writer-status {
-    margin: 8px 0 14px;
-    padding: 8px 12px;
+    margin: 16px 0 12px;
+    padding: 12px 16px;
     border-radius: 2px;
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 14px;
+    font-size: 20px;
     text-align: center;
     background: rgba(255,255,255,0.4);
     border: 1px dotted var(--sepia-soft);
     color: var(--sepia);
     min-height: 35px;
+    position: relative;
+  }
+  .writer-status::before {
+    content: '⏱';
+    margin-right: 8px;
+    font-style: normal;
+    opacity: 0.5;
+  }
+  .writer-status.active::before {
+    content: '⚙';
+    opacity: 1;
+    animation: spin 2s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
   .writer-status.active {
     background: var(--sage-bg);
@@ -187,6 +489,8 @@
     color: var(--ink);
     border-color: var(--sage-soft);
     animation: subtle-pulse 1.4s ease-in-out infinite;
+    font-style: normal;
+    font-weight: 600;
   }
   .library.naive .writer-status.active {
     background: var(--rose-bg);
@@ -207,7 +511,7 @@
   /* ── Section labels ───────────────────────────────────── */
   .section-label {
     font-family: 'IM Fell English SC', serif;
-    font-size: 13px;
+    font-size: 19px;
     color: var(--gold-deep);
     letter-spacing: 0.18em;
     margin: 16px 0 8px;
@@ -216,13 +520,194 @@
     display: flex; justify-content: space-between; align-items: baseline;
     flex-wrap: wrap;
   }
+  /* Primary section label — for the hero content (Enquiries Received) */
+  .section-label.primary {
+    font-size: 24px;
+    color: var(--ink);
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 6px;
+    margin-top: 8px;
+  }
+  .section-label.primary .count {
+    font-size: 22px;
+    color: var(--gold-deep);
+    font-weight: 600;
+  }
   .section-label .count {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     text-transform: none;
-    font-size: 13px;
+    font-size: 19px;
     color: var(--sepia);
     letter-spacing: 0;
+  }
+
+  /* ── Library body: 2-column layout with enquiries on left, sidebar on right ── */
+  .library-body {
+    display: grid;
+    grid-template-columns: 1fr 290px;
+    gap: 22px;
+    align-items: start;
+    margin-top: 14px;
+  }
+  /* When showing both libraries side-by-side (no solo class), fall back
+     to single column inside each library — the libraries are already half-width
+     so a sidebar would be too cramped */
+  .stage:not(.solo-safe):not(.solo-naive) .library-body {
+    grid-template-columns: 1fr;
+  }
+
+  .library-side {
+    background: rgba(139,105,20,0.06);
+    border: 1px dashed var(--sepia-soft);
+    border-radius: 3px;
+    padding: 14px 14px 16px;
+  }
+  .side-heading {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    color: var(--sepia);
+    text-align: center;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .library-side .section-label.side-label {
+    font-size: 15px;
+    margin: 14px 0 6px;
+    padding-bottom: 3px;
+  }
+  .library-side .section-label.side-label:first-child {
+    margin-top: 0;
+  }
+  .library-side .section-label.side-label .count {
+    font-size: 14px;
+  }
+  .library-side .manifest-zone {
+    padding: 10px;
+    margin-top: 0;
+  }
+  .library-side .ptr-box {
+    padding: 7px 8px;
+  }
+  .library-side .ptr-box .v { font-size: 13px; }
+  .library-side .ptr-box .rows { font-size: 22px; }
+  .library-side .ptr-box .rows-sub { font-size: 13px; }
+  .library-side .ptr-arrow { font-size: 22px; }
+  .library-side .filelist {
+    min-height: 32px;
+    padding: 4px;
+  }
+  .library-side .file {
+    font-size: 13px;
+    padding: 3px 7px;
+  }
+  .library-side .no-manifest {
+    margin: 0 0 4px;
+    padding: 10px 6px;
+    font-size: 15px;
+    line-height: 1.35;
+  }
+  .no-manifest-sub {
+    display: block;
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 3px;
+  }
+
+  /* ── Manifest contents (top events) display ─────────────── */
+  .manifest-contents {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--sepia-soft);
+  }
+  .manifest-contents-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: var(--gold-deep);
+    margin-bottom: 6px;
+  }
+  #manifest-active-label {
+    color: var(--sage);
+    letter-spacing: 0.1em;
+    font-size: 11px;
+  }
+  #naive-active-label {
+    color: var(--rose);
+    letter-spacing: 0.1em;
+    font-size: 11px;
+  }
+  .manifest-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: var(--cream);
+    border: 1px solid var(--sepia-soft);
+    border-radius: 2px;
+    padding: 6px 8px;
+  }
+  .manifest-events-list .ev-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 13px;
+  }
+  .manifest-events-list .ev-row.top {
+    font-weight: 600;
+  }
+  .manifest-events-list .ev-row.top .ev-val { color: var(--sage); }
+  .manifest-events-list .ev-row.top .ev-cnt { color: var(--sage); }
+  .library.naive .manifest-events-list .ev-row.top .ev-val,
+  .library.naive .manifest-events-list .ev-row.top .ev-cnt {
+    color: var(--rose);
+  }
+  .manifest-events-list .ev-val {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .manifest-events-list .ev-cnt {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: var(--sepia);
+  }
+  .manifest-events-empty {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 13px;
+    text-align: center;
+    opacity: 0.6;
+    padding: 2px;
+  }
+
+  /* ── Verified reader card (top event matches manifest) ─── */
+  .enquiry.verified {
+    border-left-width: 6px;
+    border-left-color: var(--sage);
+    background: linear-gradient(to right, var(--sage-bg) 0%, rgba(255,255,255,0.78) 65%);
+  }
+  .match-badge {
+    display: inline-block;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    background: var(--sage);
+    color: var(--cream);
+    padding: 3px 9px;
+    border-radius: 100px;
+    white-space: nowrap;
+    margin-left: 6px;
+  }
+  .match-badge.bad {
+    background: var(--rose);
+    color: var(--cream);
   }
 
   /* ── File list with fade-in animation ─────────────────── */
@@ -237,7 +722,7 @@
   }
   .file {
     font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
-    font-size: 11px;
+    font-size: 17px;
     padding: 4px 9px;
     border-radius: 2px;
     background: var(--sage-bg);
@@ -266,7 +751,7 @@
     opacity: 0.6;
     text-align: center;
     padding: 6px;
-    font-size: 13px;
+    font-size: 19px;
     width: 100%;
   }
 
@@ -296,7 +781,7 @@
   .ptr-box .v {
     display: block;
     font-family: 'IM Fell English SC', serif;
-    font-size: 12px;
+    font-size: 18px;
     color: var(--sepia);
     letter-spacing: 0.15em;
   }
@@ -304,7 +789,7 @@
     display: block;
     font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: 22px;
+    font-size: 30px;
     color: var(--ink);
     margin-top: 2px;
     line-height: 1;
@@ -312,7 +797,7 @@
   .ptr-box .rows-sub {
     font-family: 'EB Garamond', serif;
     font-style: italic;
-    font-size: 11px;
+    font-size: 17px;
     color: var(--sepia);
   }
   .ptr-box.active {
@@ -326,7 +811,7 @@
   .ptr-arrow {
     font-family: 'IM Fell English SC', serif;
     color: var(--gold-deep);
-    font-size: 22px;
+    font-size: 30px;
     text-align: center;
   }
 
@@ -339,7 +824,7 @@
     color: var(--rose);
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 14px;
+    font-size: 20px;
     border-radius: 2px;
   }
 
@@ -360,7 +845,7 @@
     transform: translate(-50%, -50%);
     background: var(--parchment);
     color: var(--gold-deep);
-    font-size: 18px;
+    font-size: 24px;
     padding: 8px 0;
   }
 
@@ -369,10 +854,12 @@
     min-height: 120px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 6px;
-    background: rgba(255,255,255,0.25);
-    border-radius: 2px;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid var(--sepia-soft);
+    border-radius: 3px;
+    box-shadow: inset 0 1px 3px rgba(44,24,16,0.05);
   }
   .enquiry {
     background: rgba(255,255,255,0.7);
@@ -388,8 +875,8 @@
   .enquiry.calamity { border-left-color: var(--rose); background: linear-gradient(to right, var(--rose-bg) 0%, rgba(255,255,255,0.7) 60%); }
 
   @keyframes slide-in {
-    from { opacity: 0; transform: translateX(-16px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   .enquiry-head {
@@ -406,25 +893,46 @@
     border: 1.5px solid var(--gold);
     display: flex; align-items: center; justify-content: center;
     font-family: 'IM Fell English SC', serif;
-    font-size: 12px;
+    font-size: 18px;
     flex-shrink: 0;
   }
   .reader-name {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 22px;
     line-height: 1.1;
   }
   .reader-time {
+    display: inline-block;
+    margin-top: 4px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--ink);
+    background: var(--gold);
+    padding: 3px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.02em;
+  }
+  .reader-time .t-label {
     font-family: 'EB Garamond', serif;
     font-style: italic;
-    font-size: 12px;
-    color: var(--sepia);
+    font-weight: 400;
+    color: var(--ink);
+    opacity: 0.7;
+    font-size: 16px;
+    margin-right: 4px;
+  }
+  .reader-time .t-value {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-weight: 700;
+    font-size: 20px;
   }
   .reader-rows {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: 22px;
+    font-size: 30px;
     color: var(--ink);
     line-height: 1;
     text-align: right;
@@ -433,7 +941,7 @@
     font-family: 'EB Garamond', serif;
     font-style: italic;
     font-weight: 400;
-    font-size: 11px;
+    font-size: 17px;
     color: var(--sepia);
     margin-left: 4px;
   }
@@ -442,7 +950,7 @@
     padding-top: 6px;
     border-top: 1px dotted var(--sepia-soft);
     font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
+    font-size: 19px;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -453,14 +961,14 @@
   .enquiry.ok-v1 .outcome-label, .enquiry.ok-v2 .outcome-label { color: var(--sage); }
   .enquiry.partial .outcome-label  { color: var(--gold-deep); }
   .enquiry.calamity .outcome-label { color: var(--rose); }
-  .outcome-sub { font-style: italic; color: var(--sepia); font-size: 12px; }
+  .outcome-sub { font-style: italic; color: var(--sepia); font-size: 18px; }
 
   .top-mood {
     margin-top: 6px;
     display: flex;
     justify-content: space-between;
     font-family: 'EB Garamond', serif;
-    font-size: 12px;
+    font-size: 18px;
     color: var(--sepia);
     font-style: italic;
   }
@@ -469,6 +977,100 @@
     font-weight: 600;
     color: var(--ink);
     font-style: normal;
+  }
+
+  /* ── Expandable aggregates inside enquiry cards ─────────── */
+  .agg-toggle {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(139,105,20,0.08);
+    border: 1px dashed var(--sepia-soft);
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    color: var(--gold-deep);
+    transition: all 150ms ease;
+    text-align: center;
+  }
+  .agg-toggle:hover {
+    background: rgba(139,105,20,0.16);
+    color: var(--ink);
+  }
+  .agg-toggle .chevron {
+    display: inline-block;
+    transition: transform 200ms ease;
+    margin-left: 6px;
+  }
+  .agg-toggle.open .chevron { transform: rotate(180deg); }
+
+  .agg-detail {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 350ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .agg-detail.open { max-height: 800px; }
+  .agg-detail-inner {
+    padding-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .agg-section {
+    background: rgba(255,255,255,0.4);
+    border: 1px solid var(--sepia-soft);
+    border-radius: 2px;
+    padding: 10px 14px;
+  }
+  .agg-section-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    color: var(--gold-deep);
+    margin-bottom: 8px;
+  }
+  .agg-bar-row {
+    display: grid;
+    grid-template-columns: minmax(110px, 1fr) 1.5fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 16px;
+  }
+  .agg-bar-row .val {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .agg-bar-row .bar {
+    height: 7px;
+    background: rgba(139,105,20,0.12);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .agg-bar-row .bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--sage);
+    border-radius: 100px;
+  }
+  .library.naive .agg-bar-row .bar-fill { background: var(--rose); }
+  .agg-bar-row .cnt {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 14px;
+    color: var(--sepia);
+  }
+  .agg-empty {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 15px;
+    text-align: center;
+    padding: 6px;
+    opacity: 0.6;
   }
 
   /* ── Ledger (appears at end) ──────────────────────────── */
@@ -490,7 +1092,7 @@
   }
   .ledger-title {
     font-family: 'IM Fell English SC', serif;
-    font-size: 18px;
+    font-size: 24px;
     color: var(--gold-deep);
     letter-spacing: 0.2em;
     text-align: center;
@@ -499,7 +1101,7 @@
   .ledger-quote {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 17px;
+    font-size: 23px;
     text-align: center;
     margin-bottom: 22px;
     line-height: 1.5;
@@ -512,7 +1114,7 @@
   .ledger-col { text-align: center; }
   .ledger-col h3 {
     font-family: 'IM Fell English SC', serif;
-    font-size: 14px;
+    font-size: 20px;
     letter-spacing: 0.16em;
     margin: 0 0 8px;
   }
@@ -520,7 +1122,7 @@
   .ledger-col.naive h3 { color: var(--rose); }
   .ledger-stat {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 36px;
+    font-size: 45px;
     font-weight: 600;
   }
   .ledger-col.safe  .ledger-stat { color: var(--sage); }
@@ -529,7 +1131,7 @@
     font-family: 'EB Garamond', serif;
     font-style: italic;
     color: var(--sepia);
-    font-size: 14px;
+    font-size: 20px;
   }
   .ledger-link {
     margin-top: 22px;
@@ -552,7 +1154,7 @@
       background-size: 100% 1.5px;
     }
     .ledger-cols { grid-template-columns: 1fr; }
-    h1.title { font-size: 26px; }
+    h1.title { font-size: 35px; }
   }
 </style>
 </head>
@@ -563,67 +1165,115 @@
   <p class="subtitle">In which manifests, like good manners, prevent considerable embarrassment.</p>
 </div>
 
+<nav class="main-tabs">
+  <button class="main-tab active" data-tab="live">Live Demo</button>
+  <button class="main-tab" data-tab="benchmarks">Benchmarks</button>
+</nav>
+
+<div class="main-tab-content active" data-tab-content="live">
+
 <div class="status-bar">
   <span class="status-pill" id="status-pill">CONNECTING…</span>
   <span class="status-text" id="status-text">…</span>
   <span class="status-meta" id="status-meta">—</span>
 </div>
 
+<div class="end-controls" id="end-controls">
+  <span class="ec-label">After the demo — switch view:</span>
+  <button class="ec-btn" data-view="safe">Mr. Darcy only</button>
+  <button class="ec-btn" data-view="both">Show both</button>
+  <button class="ec-btn active" data-view="naive">Mr. Wickham only</button>
+</div>
+
+<div class="intermission-controls" id="intermission-controls">
+  <span class="ec-label">⏸  Intermission — take your time.</span>
+  <button class="ec-btn primary" id="continue-btn">Begin Act II  →</button>
+</div>
+
 <div class="stage">
 
   <section class="library safe">
     <header class="library-head">
-      <div class="library-chapter">CHAPTER THE FIRST</div>
       <h2 class="library-title">Mr. Darcy's Library</h2>
-      <div class="library-sub">Publishing via the manifest, atomically and in private.</div>
+      <div class="library-method">SAFE PUBLISHING · <code>publish()</code></div>
+      <div class="library-sub">Stages new data, validates it, then atomically flips the manifest pointer.</div>
       <div class="prefix-pill">staging/demo/v2/  +  published/demo/latest.json</div>
     </header>
 
     <div class="writer-status" id="safe-writer">at rest</div>
 
-    <div class="section-label">Staging Area<span class="count" id="safe-staging-count">0 files</span></div>
-    <div class="filelist" id="safe-staging"></div>
-
-    <div class="manifest-zone">
-      <div class="section-label" style="border:none;margin:0 0 8px;padding:0;">The Manifest</div>
-      <div class="manifest-pointer">
-        <div class="ptr-box active" id="ptr-v1">
-          <span class="v">VOLUME I</span>
-          <span class="rows" id="ptr-v1-rows">—</span>
-          <span class="rows-sub">rows</span>
-        </div>
-        <div class="ptr-arrow">⇆</div>
-        <div class="ptr-box" id="ptr-v2">
-          <span class="v">VOLUME II</span>
-          <span class="rows" id="ptr-v2-rows">—</span>
-          <span class="rows-sub">rows</span>
-        </div>
+    <div class="library-body">
+      <div class="library-main">
+        <div class="section-label primary">Enquiries Received<span class="count" id="safe-enq-count">0</span></div>
+        <div class="enquiries" id="safe-enq"></div>
       </div>
-    </div>
 
-    <div class="section-label">Enquiries Received<span class="count" id="safe-enq-count">0</span></div>
-    <div class="enquiries" id="safe-enq"></div>
+      <aside class="library-side">
+        <div class="side-heading">behind the scenes</div>
+
+        <div class="manifest-zone">
+          <div class="section-label side-label" style="border:none;margin:0 0 6px;padding:0;">The Manifest</div>
+          <div class="manifest-pointer">
+            <div class="ptr-box active" id="ptr-v1">
+              <span class="v">VOL I</span>
+              <span class="rows" id="ptr-v1-rows">—</span>
+              <span class="rows-sub">rows</span>
+            </div>
+            <div class="ptr-arrow">⇆</div>
+            <div class="ptr-box" id="ptr-v2">
+              <span class="v">VOL II</span>
+              <span class="rows" id="ptr-v2-rows">—</span>
+              <span class="rows-sub">rows</span>
+            </div>
+          </div>
+          <div class="manifest-contents" id="manifest-contents">
+            <div class="manifest-contents-label">Top events <span id="manifest-active-label">(active)</span></div>
+            <div class="manifest-events-list" id="manifest-events-list">
+              <div class="manifest-events-empty">(not yet published)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label side-label">Staging<span class="count" id="safe-staging-count">0 files</span></div>
+        <div class="filelist" id="safe-staging"></div>
+      </aside>
+    </div>
   </section>
 
   <div class="divider"></div>
 
   <section class="library naive">
     <header class="library-head">
-      <div class="library-chapter">CHAPTER THE SECOND</div>
       <h2 class="library-title">Mr. Wickham's Library</h2>
-      <div class="library-sub">Overwriting in place. No manifest, no safety net.</div>
+      <div class="library-method naive">NAIVE PUBLISHING · <code>naive_publish()</code></div>
+      <div class="library-sub">Deletes the existing dataset, then re-uploads in place. No manifest.</div>
       <div class="prefix-pill">curated/demo/</div>
     </header>
 
     <div class="writer-status" id="naive-writer">at rest</div>
 
-    <div class="section-label">Curated Area<span class="count" id="naive-files-count">0 files</span></div>
-    <div class="filelist" id="naive-files"></div>
+    <div class="library-body">
+      <div class="library-main">
+        <div class="section-label primary">Enquiries Received<span class="count" id="naive-enq-count">0</span></div>
+        <div class="enquiries" id="naive-enq"></div>
+      </div>
 
-    <div class="no-manifest">✕  no manifest — no atomic switch — no safety net</div>
+      <aside class="library-side">
+        <div class="side-heading">behind the scenes</div>
 
-    <div class="section-label">Enquiries Received<span class="count" id="naive-enq-count">0</span></div>
-    <div class="enquiries" id="naive-enq"></div>
+        <div class="no-manifest">✕  no manifest<br><span class="no-manifest-sub">no atomic switch — no safety net</span></div>
+
+        <div class="manifest-contents">
+          <div class="manifest-contents-label">Top events <span id="naive-active-label">—</span></div>
+          <div class="manifest-events-list" id="naive-events-list">
+            <div class="manifest-events-empty">(not yet uploaded)</div>
+          </div>
+        </div>
+
+        <div class="section-label side-label">Curated<span class="count" id="naive-files-count">0 files</span></div>
+        <div class="filelist" id="naive-files"></div>
+      </aside>
+    </div>
   </section>
 
 </div>
@@ -645,10 +1295,87 @@
       <div class="ledger-detail" id="ledger-naive-detail">in damages</div>
     </div>
   </div>
-  <div class="ledger-link">
-    Persistent report saved at <code>results/demo_report.html</code>
-  </div>
 </div>
+
+</div><!-- /main-tab-content live -->
+
+<div class="main-tab-content" data-tab-content="benchmarks">
+
+  <div class="bench-intro">
+    <h2 class="bench-h2">Empirical Findings</h2>
+    <p class="bench-p" id="bench-intro-p">Measurements taken across benchmark runs on S3 and Azure, dataset sizes Small to Large.</p>
+  </div>
+
+  <div class="bench-empty" id="bench-empty" style="display:none">
+    <h3>No benchmark data found</h3>
+    <p>Place a <code>results.csv</code> file in the project root (the output of <code>bench.py</code>) and refresh.</p>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card" id="bench-card-overhead">
+      <h3 class="bench-h3">Publishing Overhead</h3>
+      <p class="bench-finding">
+        Validation and manifest writing add only milliseconds to a publish operation —
+        a negligible cost compared to the upload itself, which takes seconds to minutes.
+        <strong>The manifest is essentially free.</strong>
+      </p>
+      <div class="chart-box"><canvas id="chart-overhead"></canvas></div>
+    </div>
+
+    <div class="bench-card" id="bench-card-context">
+      <h3 class="bench-h3">Upload vs Publish Overhead</h3>
+      <p class="bench-finding">
+        In context: the publish overhead is barely visible next to the upload itself.
+        <strong>Manifest-based publishing adds a thin sliver of time to operations that already take seconds to minutes.</strong>
+        You get atomic safety essentially for free.
+      </p>
+      <div class="chart-box"><canvas id="chart-context"></canvas></div>
+    </div>
+
+    <div class="bench-card" id="bench-card-throughput">
+      <h3 class="bench-h3">Transfer Throughput: S3 vs Azure</h3>
+      <p class="bench-finding" id="bench-throughput-finding">
+        Without SDK chunking, Azure collapses on the largest dataset.
+        With chunking enabled (see next chart), Azure recovers to comparable
+        levels. <strong>SDK defaults matter.</strong>
+      </p>
+      <div class="chart-box"><canvas id="chart-throughput"></canvas></div>
+    </div>
+
+    <div class="bench-card" id="bench-card-chunking">
+      <h3 class="bench-h3">Azure SDK: Chunking Impact</h3>
+      <p class="bench-finding">
+        Azure's <code>upload_blob()</code> with default settings sends one block
+        at a time. Enabling chunked concurrent uploads gives a
+        <strong>6× speedup on Large datasets</strong> (1322s → 220s) — the single
+        biggest performance lever in the project.
+      </p>
+      <div class="chart-box"><canvas id="chart-chunking"></canvas></div>
+    </div>
+
+    <div class="bench-card" id="bench-card-scaling">
+      <h3 class="bench-h3">Scan Time Scaling</h3>
+      <p class="bench-finding">
+        Scan time grows roughly linearly with dataset size, regardless of which
+        query preset is used. <strong>Data volume dominates query latency</strong>
+        — the filter you apply matters far less than how much data sits underneath.
+      </p>
+      <div class="chart-box"><canvas id="chart-scaling"></canvas></div>
+    </div>
+
+    <div class="bench-card" id="bench-card-selectivity">
+      <h3 class="bench-h3">Scan Selectivity (Predicate Pushdown)</h3>
+      <p class="bench-finding">
+        Scan time does not always shrink with row selectivity. Queries that match few rows
+        can still pay the full file-listing and metadata cost, while queries matching many
+        rows benefit from streaming reads. Predicate pushdown matters most when filter
+        columns align with parquet's row-group statistics.
+      </p>
+      <div class="chart-box"><canvas id="chart-selectivity"></canvas></div>
+    </div>
+  </div>
+
+</div><!-- /main-tab-content benchmarks -->
 
 <script>
 const $ = id => document.getElementById(id);
@@ -657,6 +1384,7 @@ const fmt = n => n == null ? '—' : Number(n).toLocaleString();
 // Track the last-seen counts so we know when to append/animate
 let lastSafeEnq = 0, lastNaiveEnq = 0;
 let lastSafeStaging = 0, lastNaiveFiles = 0;
+let lastSafeStagingVersion = null;
 let lastNaiveHint = null;
 
 async function poll() {
@@ -674,11 +1402,12 @@ function render(s) {
   // ── Status bar ──────────────────────────────────────────
   const act = s.act;
   const actLabels = {
-    'idle':  ['IDLE', 'Awaiting the curtain to rise…'],
-    'setup': ['SETUP', 'Publishing the v1 baseline to both libraries…'],
-    'safe':  ['ACT I',  'Mr. Darcy publishes Volume the Second via the manifest.'],
-    'naive': ['ACT II', 'Mr. Wickham overwrites curated/ in place.'],
-    'done':  ['CURTAIN', 'The demonstration is complete. Persistent report saved.']
+    'idle':      ['IDLE',         'Awaiting the curtain to rise…'],
+    'setup':     ['SETUP',        'Publishing the v1 baseline to both libraries…'],
+    'safe':      ['ACT I',        'Mr. Darcy publishes via safe_publish() — manifest-based, atomic.'],
+    'interlude': ['INTERMISSION', 'Act I complete. Mr. Wickham approaches the stage…'],
+    'naive':     ['ACT II',       'Mr. Wickham publishes via naive_publish() — delete + re-upload.'],
+    'done':      ['CURTAIN',      'The demonstration is complete.']
   };
   const [pillText, textPart] = actLabels[act] || ['—', '—'];
   $('status-pill').textContent = pillText;
@@ -687,6 +1416,36 @@ function render(s) {
   if (s.bucket) {
     $('status-meta').textContent = `${s.backend_name}://${s.bucket}/${s.dataset_id}/`;
   }
+
+  // ── Solo stage: show only the active method during its act ─
+  // Acts force solo view. After the demo ends, the user can toggle
+  // via the end-controls bar. The 'interlude' state keeps Darcy
+  // visible so the audience can study Act I's outcome.
+  const stage = document.querySelector('.stage');
+  if (act === 'safe' || act === 'setup' || act === 'interlude') {
+    stage.classList.remove('solo-naive');
+    stage.classList.add('solo-safe');
+    if (window._userView) window._userView = null;  // reset user override
+  } else if (act === 'naive') {
+    stage.classList.remove('solo-safe');
+    stage.classList.add('solo-naive');
+    if (window._userView) window._userView = null;
+  } else if (act === 'done') {
+    // End of demo: default to solo Wickham (the act we ended on)
+    // unless the user has explicitly clicked a toggle button.
+    const v = window._userView || 'naive';
+    stage.classList.toggle('solo-safe',  v === 'safe');
+    stage.classList.toggle('solo-naive', v === 'naive');
+    // 'both' → neither class
+  } else {
+    stage.classList.remove('solo-safe', 'solo-naive');
+  }
+  // Show the toggle controls only when the demo has ended
+  const endControls = $('end-controls');
+  if (endControls) endControls.style.display = (act === 'done') ? 'flex' : 'none';
+  // Show intermission controls only during the interlude
+  const intermControls = $('intermission-controls');
+  if (intermControls) intermControls.style.display = (act === 'interlude') ? 'flex' : 'none';
 
   // ── Writer status badges ────────────────────────────────
   renderWriterStatus('safe', s.safe);
@@ -701,11 +1460,31 @@ function render(s) {
   $('ptr-v1').classList.toggle('active', active === 'v1' || active == null);
   $('ptr-v2').classList.toggle('active', active === 'v2');
 
+  // ── Manifest contents (top events for the active version) ─
+  const manifests = {
+    v1: s.safe.manifest_top_events_v1,
+    v2: s.safe.manifest_top_events_v2,
+  };
+  renderManifestContents(active, manifests);
+  renderNaiveTopEvents(s.naive.version_hint, manifests);
+
   // ── Staging file list ──────────────────────────────────
-  renderFileList($('safe-staging'), s.safe.staging_v2_files, 'v2', lastSafeStaging);
-  lastSafeStaging = s.safe.staging_v2_files;
+  // Show files for whichever version is currently being staged.
+  // Setup → v1, Act I → v2. We reset the chip list when the version flips
+  // so the audience sees a clean transition.
+  const currentStaging = s.safe.current_staging || 'v2';
+  const stagingFiles = currentStaging === 'v1'
+    ? (s.safe.staging_v1_files || 0)
+    : (s.safe.staging_v2_files || 0);
+  if (currentStaging !== lastSafeStagingVersion) {
+    $('safe-staging').innerHTML = '';
+    lastSafeStaging = 0;
+    lastSafeStagingVersion = currentStaging;
+  }
+  renderFileList($('safe-staging'), stagingFiles, currentStaging, lastSafeStaging);
+  lastSafeStaging = stagingFiles;
   $('safe-staging-count').textContent =
-    s.safe.staging_v2_files === 1 ? '1 file' : `${s.safe.staging_v2_files} files`;
+    stagingFiles === 1 ? '1 file' : `${stagingFiles} files`;
 
   // ── Curated file list (with v1/v2 hint) ────────────────
   const hint = s.naive.version_hint;
@@ -721,11 +1500,66 @@ function render(s) {
     s.naive.curated_files === 1 ? '1 file' : `${s.naive.curated_files} files`;
 
   // ── Enquiries: append new ones ─────────────────────────
-  appendNewEnquiries('safe', s.reads.safe, s.baseline_v1, s.baseline_v2);
-  appendNewEnquiries('naive', s.reads.naive, s.baseline_v1, s.baseline_v2);
+  // Both sides get the manifests so every card can show its verification
+  // status. On Darcy's side this proves the manifest works; on Wickham's
+  // side it shows which readers got lucky and which got broken data.
+  appendNewEnquiries('safe',  s.reads.safe,  s.baseline_v1, s.baseline_v2, manifests);
+  appendNewEnquiries('naive', s.reads.naive, s.baseline_v1, s.baseline_v2, manifests);
 
   // ── Ledger (at end) ────────────────────────────────────
   if (s.done) renderLedger(s);
+}
+
+function renderManifestContents(activeVersion, manifests) {
+  // Decide which version's manifest to display. Prefer the active one;
+  // before any publish, default to v1 if it has data.
+  const version = activeVersion === 'v2' ? 'v2'
+                 : (activeVersion === 'v1' ? 'v1'
+                 : (manifests.v1 ? 'v1' : (manifests.v2 ? 'v2' : null)));
+  const events = version ? manifests[version] : null;
+  const labelEl = $('manifest-active-label');
+  const listEl  = $('manifest-events-list');
+  if (!events || events.length === 0) {
+    labelEl.textContent = '';
+    listEl.innerHTML = '<div class="manifest-events-empty">(not yet published)</div>';
+    return;
+  }
+  labelEl.textContent = `(${version.toUpperCase()})`;
+  // Show the top 3 events from the manifest
+  const html = events.slice(0, 3).map((e, idx) => {
+    const cls = idx === 0 ? 'ev-row top' : 'ev-row';
+    return `<div class="${cls}">
+      <span class="ev-val">${e.value}</span>
+      <span class="ev-cnt">${fmt(e.count)}</span>
+    </div>`;
+  }).join('');
+  listEl.innerHTML = html;
+}
+
+function renderNaiveTopEvents(versionHint, manifests) {
+  // Wickham has no manifest — but the underlying data still has top events.
+  // We display them in his sidebar so the audience can compare each reader's
+  // observed top event against what should be there. The label is dimmer
+  // than Darcy's to reinforce that this isn't manifest-verified.
+  const version = versionHint === 'v2' ? 'v2'
+                 : (versionHint === 'v1' ? 'v1' : null);
+  const events = version ? manifests[version] : null;
+  const labelEl = $('naive-active-label');
+  const listEl  = $('naive-events-list');
+  if (!events || events.length === 0) {
+    labelEl.textContent = '';
+    listEl.innerHTML = '<div class="manifest-events-empty">(not yet uploaded)</div>';
+    return;
+  }
+  labelEl.textContent = `(${version.toUpperCase()})`;
+  const html = events.slice(0, 3).map((e, idx) => {
+    const cls = idx === 0 ? 'ev-row top' : 'ev-row';
+    return `<div class="${cls}">
+      <span class="ev-val">${e.value}</span>
+      <span class="ev-cnt">${fmt(e.count)}</span>
+    </div>`;
+  }).join('');
+  listEl.innerHTML = html;
 }
 
 function renderWriterStatus(side, sideState) {
@@ -777,7 +1611,7 @@ function renderFileList(container, count, version, prevCount) {
   });
 }
 
-function appendNewEnquiries(side, reads, v1, v2) {
+function appendNewEnquiries(side, reads, v1, v2, manifests) {
   const container = $(side + '-enq');
   const counter = $(side + '-enq-count');
   const lastSeen = side === 'safe' ? lastSafeEnq : lastNaiveEnq;
@@ -789,7 +1623,8 @@ function appendNewEnquiries(side, reads, v1, v2) {
   }
 
   for (let i = (side === 'safe' ? lastSafeEnq : lastNaiveEnq); i < reads.length; i++) {
-    container.appendChild(makeEnquiryCard(reads[i], side, v1, v2));
+    // Prepend so newest enquiry appears at the top (no scrolling)
+    container.insertBefore(makeEnquiryCard(reads[i], side, v1, v2, manifests), container.firstChild);
   }
   if (side === 'safe') lastSafeEnq = reads.length;
   else lastNaiveEnq = reads.length;
@@ -797,18 +1632,19 @@ function appendNewEnquiries(side, reads, v1, v2) {
   counter.textContent = reads.length;
 }
 
-function makeEnquiryCard(rec, side, v1, v2) {
+function makeEnquiryCard(rec, side, v1, v2, manifests) {
   const initials = rec.initials || '??';
   const name = rec.reader || 'A Stranger';
   const t = rec.time != null ? rec.time : 0;
 
   // Classify outcome
   let cls, label, sub, rowsHtml, moodHtml;
+  let readVersion = null;  // 'v1' / 'v2' / null — used for manifest match check
   if (!rec.ok) {
     cls = 'calamity';
     label = '✕  CALAMITY';
     sub = 'the dataset has vanished entirely';
-    rowsHtml = `<div class="reader-rows" style="font-size:14px;color:var(--rose);">no data</div>`;
+    rowsHtml = `<div class="reader-rows" style="font-size: 20px;color:var(--rose);">no data</div>`;
     moodHtml = '';
   } else {
     const rows = rec.rows;
@@ -816,10 +1652,12 @@ function makeEnquiryCard(rec, side, v1, v2) {
       cls = 'ok-v1';
       label = '✓  Volume the First, intact';
       sub = `${fmt(rows)} rows`;
+      readVersion = 'v1';
     } else if (v2 != null && rows === v2) {
       cls = 'ok-v2';
       label = '✓  Volume the Second, atomically arrived';
       sub = `${fmt(rows)} rows`;
+      readVersion = 'v2';
     } else {
       cls = 'partial';
       label = '⚠  Partial reading';
@@ -827,30 +1665,113 @@ function makeEnquiryCard(rec, side, v1, v2) {
       sub = `${fmt(rows)} rows (expected ~${fmt(ref)})`;
     }
     rowsHtml = `<div class="reader-rows">${fmt(rows)}<span class="sub">rows</span></div>`;
-    const topMood = (rec.top_moods && rec.top_moods.length) ? rec.top_moods[0] : null;
-    moodHtml = topMood
-      ? `<div class="top-mood">Top mood observed: <span class="top-mood-val">${topMood.value}</span></div>`
+    const topEvent = (rec.top_events && rec.top_events.length) ? rec.top_events[0] : null;
+    moodHtml = topEvent
+      ? `<div class="top-mood">Top event observed: <span class="top-mood-val">${topEvent.value}</span></div>`
       : '';
   }
 
+  // ── Manifest-match status ────────────────────────────
+  // Every card with manifest data gets a verification badge:
+  //   ✓ matches manifest  — reader got exactly what the manifest promised
+  //   ✗ doesn't match     — partial read, wrong content, or no data
+  // On Darcy's side: every card will show ✓ (the manifest guarantees this).
+  // On Wickham's side: some readers got lucky, most didn't.
+  let verified = false;
+  let matchBadge = '';
+  if (manifests && (manifests.v1 || manifests.v2)) {
+    if (!rec.ok) {
+      // Calamity — no data at all to match against
+      matchBadge = '<span class="match-badge bad">✗ no data</span>';
+    } else if (readVersion && manifests[readVersion] && manifests[readVersion].length
+               && rec.top_events && rec.top_events.length) {
+      // Exact row count match — now check whether the content actually matches
+      const readerTop   = rec.top_events[0].value;
+      const manifestTop = manifests[readVersion][0].value;
+      if (readerTop && manifestTop && readerTop === manifestTop) {
+        verified = true;
+        matchBadge = '<span class="match-badge">✓ matches manifest</span>';
+      } else {
+        matchBadge = '<span class="match-badge bad">✗ wrong content</span>';
+      }
+    } else if (cls === 'partial') {
+      // Partial read — wrong row count, regardless of what aggregates show
+      matchBadge = '<span class="match-badge bad">✗ doesn\'t match</span>';
+    }
+  }
+
+  // Build the expandable aggregates panel (only if we have data)
+  let aggHtml = '';
+  if (rec.ok && ((rec.top_moods && rec.top_moods.length) ||
+                  (rec.top_events && rec.top_events.length) ||
+                  (rec.top_characters && rec.top_characters.length))) {
+    aggHtml = `
+    <button class="agg-toggle" type="button">
+      <span class="agg-toggle-label">Show all aggregates</span>
+      <span class="chevron">▾</span>
+    </button>
+    <div class="agg-detail">
+      <div class="agg-detail-inner">
+        ${aggSectionHtml('Top Moods',      rec.top_moods)}
+        ${aggSectionHtml('Top Events',     rec.top_events)}
+        ${aggSectionHtml('Top Characters', rec.top_characters)}
+      </div>
+    </div>`;
+  }
+
   const div = document.createElement('div');
-  div.className = `enquiry ${cls}`;
+  div.className = `enquiry ${cls}` + (verified ? ' verified' : '');
   div.innerHTML = `
     <div class="enquiry-head">
       <div class="reader-avatar">${initials}</div>
       <div>
         <div class="reader-name">${name}</div>
-        <div class="reader-time">enquired at t = ${t.toFixed(1)}s</div>
+        <div class="reader-time"><span class="t-value">t = ${t.toFixed(1)}s</span></div>
       </div>
       ${rowsHtml}
     </div>
     <div class="outcome-row">
-      <span class="outcome-label">${label}</span>
+      <span class="outcome-label">${label}${matchBadge}</span>
       <span class="outcome-sub">${sub}</span>
     </div>
     ${moodHtml}
+    ${aggHtml}
   `;
+
+  // Wire up the expand/collapse toggle
+  const toggle = div.querySelector('.agg-toggle');
+  if (toggle) {
+    const detail = div.querySelector('.agg-detail');
+    const label = div.querySelector('.agg-toggle-label');
+    toggle.addEventListener('click', () => {
+      const open = toggle.classList.toggle('open');
+      detail.classList.toggle('open', open);
+      label.textContent = open ? 'Hide aggregates' : 'Show all aggregates';
+    });
+  }
   return div;
+}
+
+function aggSectionHtml(title, items) {
+  if (!items || items.length === 0) {
+    return `<div class="agg-section">
+      <div class="agg-section-label">${title}</div>
+      <div class="agg-empty">no data</div>
+    </div>`;
+  }
+  const maxCount = items[0].count || 1;
+  const rows = items.map(it => {
+    const w = Math.round(it.count / maxCount * 100);
+    return `<div class="agg-bar-row">
+      <span class="val">${it.value}</span>
+      <span class="bar"><span class="bar-fill" style="width:${w}%"></span></span>
+      <span class="cnt">${fmt(it.count)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="agg-section">
+    <div class="agg-section-label">${title}</div>
+    ${rows}
+  </div>`;
 }
 
 function renderLedger(s) {
@@ -866,6 +1787,296 @@ function renderLedger(s) {
   $('ledger-naive').textContent = '£' + damages;
   $('ledger-naive-detail').textContent =
     `in damages from ${naiveFail} calamities & ${naivePartial} partial readings`;
+}
+
+// ── Main tab switching (Live Demo / Benchmarks) ─────────────
+let chartsRendered = false;
+document.querySelectorAll('.main-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.main-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === target);
+    });
+    document.querySelectorAll('.main-tab-content').forEach(c => {
+      c.classList.toggle('active', c.dataset.tabContent === target);
+    });
+    if (target === 'benchmarks' && !chartsRendered) {
+      loadAndRenderBenchmarks();
+      chartsRendered = true;
+    }
+  });
+});
+
+async function loadAndRenderBenchmarks() {
+  try {
+    const r = await fetch('/api/benchmarks');
+    if (!r.ok) {
+      // 404 = no CSV; show empty state
+      document.getElementById('bench-empty').style.display = 'block';
+      ['overhead', 'context', 'throughput', 'chunking', 'scaling', 'selectivity'].forEach(id => {
+        const card = document.getElementById('bench-card-' + id);
+        if (card) card.style.display = 'none';
+      });
+      return;
+    }
+    const bench = await r.json();
+    renderCharts(bench);
+    // Update intro / footer with real numbers
+    document.getElementById('bench-intro-p').textContent =
+      `Measurements taken across ${bench.row_count.toLocaleString()} benchmark runs ` +
+      `on S3 and Azure, dataset sizes Small to Large.`;
+    if (bench.source_path) {
+      document.getElementById('bench-csv-path').textContent = bench.source_path;
+    }
+  } catch (e) {
+    console.error('Failed to load benchmarks:', e);
+  }
+}
+
+function renderCharts(BENCH) {
+  if (typeof Chart === 'undefined' || !BENCH) return;
+
+  Chart.defaults.font.family = "'EB Garamond', 'Georgia', serif";
+  Chart.defaults.color = '#2C1810';
+  Chart.defaults.font.size = 14;
+
+  const COLOURS = {
+    sage:  '#5C7A4E', sageBg: '#A8BFA0',
+    rose:  '#C4485A', roseBg: '#D89AA4',
+    gold:  '#C9A84C', sepia: '#8B6914',
+    ink:   '#2C1810', cream: '#FAF4E8',
+  };
+
+  // Chart 1: publishing overhead — stacked bars per size, S3 only
+  const pub = BENCH.publish && BENCH.publish.s3;
+  if (pub && pub.labels && pub.labels.length) {
+    new Chart(document.getElementById('chart-overhead'), {
+      type: 'bar',
+      data: {
+        labels: pub.labels.map(s => `Size ${s}`),
+        datasets: [
+          { label: 'Validation (ms)',     data: pub.validation, backgroundColor: COLOURS.sage },
+          { label: 'Manifest write (ms)', data: pub.metadata,   backgroundColor: COLOURS.gold },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: true, text: 'Manifest-writing overhead (S3, milliseconds)',
+                   font: { size: 16, weight: 'normal' } },
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true,
+               title: { display: true, text: 'ms (lower is better)' } }
+        }
+      }
+    });
+  } else {
+    document.getElementById('bench-card-overhead').style.display = 'none';
+  }
+
+  // Chart 1b: Upload vs Publish Overhead (in context, seconds, S3)
+  const ctx = BENCH.upload && BENCH.publish && BENCH.publish.s3;
+  if (ctx && BENCH.upload.s3_seconds && BENCH.publish.s3.total_seconds) {
+    const uploadSecs = BENCH.upload.s3_seconds;
+    const publishSecs = BENCH.publish.s3.total_seconds;
+    const sizes = BENCH.upload.sizes;
+    // Build the data aligned by size (just in case publish has more/fewer sizes)
+    const publishAligned = sizes.map(s => {
+      const i = BENCH.publish.s3.labels.indexOf(s);
+      return i >= 0 ? publishSecs[i] : null;
+    });
+    new Chart(document.getElementById('chart-context'), {
+      type: 'bar',
+      data: {
+        labels: sizes.map(s => `Size ${s}`),
+        datasets: [
+          { label: 'Upload time',      data: uploadSecs,      backgroundColor: COLOURS.gold },
+          { label: 'Publish overhead', data: publishAligned,  backgroundColor: COLOURS.sage },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: true, text: 'Upload vs Publish Overhead (S3, seconds)',
+                   font: { size: 16, weight: 'normal' } },
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, title: { display: true, text: 'Time (seconds)' } }
+        }
+      }
+    });
+  } else {
+    document.getElementById('bench-card-context').style.display = 'none';
+  }
+
+  // Chart 2: throughput S3 vs Azure
+  const up = BENCH.upload;
+  if (up && up.sizes && up.sizes.length) {
+    new Chart(document.getElementById('chart-throughput'), {
+      type: 'bar',
+      data: {
+        labels: up.sizes.map(s => `Size ${s}`),
+        datasets: [
+          { label: 'S3',    data: up.s3,    backgroundColor: COLOURS.sage },
+          { label: 'Azure', data: up.azure, backgroundColor: COLOURS.rose },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: true, text: 'Upload throughput (MB/s, higher is better)',
+                   font: { size: 16, weight: 'normal' } },
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, title: { display: true, text: 'MB/s' } }
+        }
+      }
+    });
+  } else {
+    document.getElementById('bench-card-throughput').style.display = 'none';
+  }
+
+  // Chart: Azure SDK Chunking impact (values from chunking experiment)
+  // (Hardcoded since this is a one-off A/B comparison, not in results.csv)
+  new Chart(document.getElementById('chart-chunking'), {
+    type: 'bar',
+    data: {
+      labels: ['S (~1 GB)', 'M (~5 GB)', 'L (~10 GB)'],
+      datasets: [
+        { label: 'No chunking',   data: [228.0, 656.9, 1322.8], backgroundColor: COLOURS.ink },
+        { label: 'With chunking', data: [18.8,  133.3,  219.9], backgroundColor: COLOURS.rose },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' },
+        title: { display: true, text: 'Azure upload time (seconds, lower is better)',
+                 font: { size: 16, weight: 'normal' } },
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, title: { display: true, text: 'Time (seconds)' } }
+      }
+    }
+  });
+
+  // Chart: Scan Time Scaling — one line per preset across S → M → L
+  const ss = BENCH.scan_scaling;
+  if (ss && ss.presets && ss.presets.length) {
+    const palette = ['#5C7A4E', '#C4485A', '#C9A84C', '#8B6914', '#2C1810',
+                     '#A8BFA0', '#D89AA4'];
+    new Chart(document.getElementById('chart-scaling'), {
+      type: 'line',
+      data: {
+        labels: ss.sizes,
+        datasets: ss.presets.map((preset, i) => ({
+          label: preset,
+          data: ss.data[preset],
+          borderColor: palette[i % palette.length],
+          backgroundColor: palette[i % palette.length],
+          borderWidth: 2,
+          tension: 0.1,
+          pointRadius: 4,
+        })),
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 14, padding: 8 } },
+          title: { display: true, text: 'Scan time (seconds) across dataset size, per preset',
+                   font: { size: 16, weight: 'normal' } },
+        },
+        scales: {
+          x: { grid: { display: false }, title: { display: true, text: 'Dataset size' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Scan time (seconds)' } }
+        }
+      }
+    });
+  } else {
+    document.getElementById('bench-card-scaling').style.display = 'none';
+  }
+
+  // Chart 3: scan selectivity — scan_ms bars + rows_matched line
+  const sc = BENCH.scan;
+  if (sc && sc.presets && sc.presets.length) {
+    new Chart(document.getElementById('chart-selectivity'), {
+      data: {
+        labels: sc.presets,
+        datasets: [
+          {
+            type: 'bar', label: 'Scan time (ms)',
+            data: sc.scan_ms, backgroundColor: COLOURS.sage, yAxisID: 'y',
+            order: 2,
+          },
+          {
+            type: 'line', label: 'Rows matched',
+            data: sc.rows_matched, borderColor: COLOURS.rose,
+            backgroundColor: COLOURS.rose, yAxisID: 'y1',
+            pointRadius: 6, pointStyle: 'circle', borderWidth: 2.5,
+            tension: 0.2, order: 1,
+          },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: true, text: 'Scan time vs rows matched, by query preset (S3, Large)',
+                   font: { size: 16, weight: 'normal' } },
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y:  { position: 'left',  beginAtZero: true,
+                title: { display: true, text: 'Scan time (ms)' } },
+          y1: { position: 'right', beginAtZero: true,
+                title: { display: true, text: 'Rows matched' },
+                grid: { display: false } },
+        }
+      }
+    });
+  } else {
+    document.getElementById('bench-card-selectivity').style.display = 'none';
+  }
+}
+
+// Wire up end-of-demo view toggle (Mr. Darcy / Both / Mr. Wickham)
+document.querySelectorAll('.ec-btn[data-view]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const view = btn.dataset.view;
+    window._userView = view;
+    // Update active styling on buttons
+    document.querySelectorAll('.ec-btn[data-view]').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+    // Apply the view immediately to the stage
+    const stage = document.querySelector('.stage');
+    stage.classList.toggle('solo-safe',  view === 'safe');
+    stage.classList.toggle('solo-naive', view === 'naive');
+    // 'both' → neither class
+  });
+});
+
+// Wire up the "Begin Act II →" continue button
+const continueBtn = document.getElementById('continue-btn');
+if (continueBtn) {
+  continueBtn.addEventListener('click', async () => {
+    continueBtn.disabled = true;
+    continueBtn.textContent = 'Advancing…';
+    try {
+      await fetch('/api/continue', { method: 'POST' });
+    } catch (e) {
+      console.error('continue failed', e);
+    }
+    // The poll() will see the act change and hide this bar.
+  });
 }
 
 // Kick off polling

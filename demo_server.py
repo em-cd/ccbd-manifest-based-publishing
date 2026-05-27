@@ -29,10 +29,17 @@ _lock = threading.Lock()
 
 _state = {
     "safe": {
-        "staging_v2_files": 0,
+        "staging_v1_files": 0,           # v1 files currently in staging
+        "staging_v2_files": 0,           # v2 files currently in staging
+        "current_staging": None,         # 'v1' / 'v2' / None — which one the UI focuses on
         "active_version": None,         # 'v1' / 'v2' / None
         "writer_busy": None,            # None, 'staging', 'flipping', 'publishing'
         "writer_msg": "",
+        # Top events that the manifest carries for each version — used by the
+        # sidebar to show what the manifest "knows" and by reader cards to
+        # highlight verified matches.
+        "manifest_top_events_v1": None,
+        "manifest_top_events_v2": None,
     },
     "naive": {
         "curated_files": 0,
@@ -40,7 +47,7 @@ _state = {
         "writer_busy": None,            # None, 'deleting', 'uploading'
         "writer_msg": "",
     },
-    "act": "idle",                      # 'idle', 'setup', 'safe', 'naive', 'done'
+    "act": "idle",                      # 'idle', 'setup', 'safe', 'interlude', 'naive', 'done'
     "baseline_v1": None,
     "baseline_v2": None,
     "reads": {"safe": [], "naive": []},
@@ -99,6 +106,35 @@ def set_version_hint(side: str, hint: str):
     list can be coloured accordingly)."""
     with _lock:
         _state[side]["version_hint"] = hint
+
+
+def set_manifest_top_events(version: str, top_events: list):
+    """Store the top-events aggregate that the manifest for a given version
+    carries. The browser uses these to render the sidebar and to highlight
+    verified reader cards."""
+    with _lock:
+        _state["safe"][f"manifest_top_events_{version}"] = top_events
+
+
+def set_current_staging(version):
+    """Tell the UI which staging version to focus on. Setup → 'v1', Act I → 'v2'.
+    The monitor still tracks both prefixes; this just decides which one is
+    visible in the sidebar."""
+    with _lock:
+        _state["safe"]["current_staging"] = version
+
+
+# ── Presenter-controlled pause between Acts ──────────────────
+# The interlude blocks on this Event. The presenter can hit /api/continue
+# to advance immediately; otherwise the demo auto-continues after a timeout.
+_continue_event = threading.Event()
+
+def wait_for_continue(timeout: float = 60.0) -> bool:
+    """Block until /api/continue is hit or `timeout` seconds elapse.
+    Returns True if continued explicitly, False on timeout."""
+    triggered = _continue_event.wait(timeout=timeout)
+    _continue_event.clear()
+    return triggered
 
 
 def add_read(side: str, record: dict):
@@ -167,6 +203,50 @@ def api_state():
     return jsonify(snapshot())
 
 
+@_app.route("/api/continue", methods=["POST", "GET"])
+def api_continue():
+    """Presenter clicks 'Begin Act II' during the interlude to advance."""
+    _continue_event.set()
+    return jsonify({"ok": True})
+
+
+# Cache benchmark data so we don't re-parse the CSV on every request
+_bench_data_cache = None
+
+def _find_bench_csv():
+    for candidate in ("results.csv", "./results.csv",
+                      "results/results.csv", "./results/results.csv",
+                      "bench/results.csv"):
+        full = os.path.abspath(candidate)
+        if os.path.exists(full):
+            return full
+    return None
+
+
+@_app.route("/api/benchmarks")
+def api_benchmarks():
+    """Returns processed benchmark data (or {error:'no_data'} if results.csv
+    isn't present). The live view's Benchmarks tab calls this once."""
+    global _bench_data_cache
+    if _bench_data_cache is not None:
+        return jsonify(_bench_data_cache)
+
+    path = _find_bench_csv()
+    if not path:
+        return jsonify({"error": "no_data", "message": "results.csv not found"}), 404
+
+    try:
+        # Import here to avoid circular import at module load
+        from demo_report import _read_bench_csv, _process_benchmarks
+        rows = _read_bench_csv(path)
+        data = _process_benchmarks(rows)
+        data["source_path"] = path
+        _bench_data_cache = data
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": "parse_failed", "message": str(e)}), 500
+
+
 @_app.route("/api/health")
 def api_health():
     """Cheap connectivity check."""
@@ -203,12 +283,14 @@ def _monitor_loop(dataset_id: str, poll_interval: float = 0.3):
 
     while _monitor_running:
         try:
+            staging_v1_keys, _ = mon_backend.list_objects(f"staging/{dataset_id}/v1/")
             staging_v2_keys, _ = mon_backend.list_objects(f"staging/{dataset_id}/v2/")
             curated_keys,    _ = mon_backend.list_objects(f"curated/{dataset_id}/")
             manifest = mon_backend.read_json(f"published/{dataset_id}/latest.json")
             active = manifest.get("version") if manifest else None
 
             with _lock:
+                _state["safe"]["staging_v1_files"] = len(staging_v1_keys)
                 _state["safe"]["staging_v2_files"] = len(staging_v2_keys)
                 _state["safe"]["active_version"]   = active
                 _state["naive"]["curated_files"]   = len(curated_keys)

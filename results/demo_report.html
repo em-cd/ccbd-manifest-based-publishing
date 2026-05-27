@@ -53,11 +53,11 @@
     background: var(--parchment);
     padding: 0 16px;
     color: var(--gold-deep);
-    font-size: 18px;
+    font-size: 22px;
   }
   h1.title {
     font-family: 'IM Fell English SC', serif;
-    font-size: 38px;
+    font-size: 44px;
     color: var(--ink);
     letter-spacing: 0.04em;
     margin: 0 0 8px;
@@ -66,7 +66,7 @@
   .subtitle {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 18px;
+    font-size: 22px;
     color: var(--sepia);
     margin: 0;
     line-height: 1.4;
@@ -76,7 +76,7 @@
     display: flex; justify-content: center; gap: 18px;
     flex-wrap: wrap;
     font-family: 'IM Fell English SC', serif;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 0.18em;
     color: var(--sepia);
   }
@@ -86,7 +86,7 @@
     padding: 4px 10px;
     border-radius: 2px;
     font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 0.04em;
     text-transform: none;
     color: var(--ink);
@@ -122,14 +122,14 @@
   }
   .library-chapter {
     font-family: 'IM Fell English SC', serif;
-    font-size: 12px;
+    font-size: 15px;
     color: var(--gold-deep);
     letter-spacing: 0.22em;
     margin-bottom: 6px;
   }
   .library-title {
     font-family: 'IM Fell English SC', serif;
-    font-size: 24px;
+    font-size: 29px;
     color: var(--ink);
     margin: 0 0 4px;
     letter-spacing: 0.02em;
@@ -138,13 +138,105 @@
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     color: var(--sepia);
-    font-size: 15px;
+    font-size: 19px;
   }
+  /* CCBD function-name banner */
+  .library-method {
+    display: inline-block;
+    margin: 10px 0 6px;
+    padding: 6px 14px;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    background: var(--sage-bg);
+    color: var(--sage);
+    border: 1.5px solid var(--sage);
+    border-radius: 2px;
+  }
+  .library-method.naive {
+    background: var(--rose-bg);
+    color: var(--rose);
+    border-color: var(--rose);
+  }
+  .library-method code {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 13px;
+    letter-spacing: 0;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+
+  /* ── View toggle: show both / Darcy only / Wickham only ── */
+  .view-toggle {
+    max-width: 1280px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .view-toggle-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    color: var(--sepia);
+    letter-spacing: 0.18em;
+    margin-right: 6px;
+  }
+  .view-btn {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    padding: 6px 14px;
+    background: var(--cream);
+    color: var(--sepia);
+    border: 1.5px solid var(--sepia-soft);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 180ms ease;
+  }
+  .view-btn:hover {
+    background: var(--parchment-2);
+    color: var(--ink);
+  }
+  .view-btn.active {
+    background: var(--ink);
+    color: var(--gold);
+    border-color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* Stage solo modes: hide one side */
+  .stage {
+    transition: all 500ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .stage.show-safe-only {
+    grid-template-columns: minmax(0, 1fr) 0 0;
+  }
+  .stage.show-naive-only {
+    grid-template-columns: 0 0 minmax(0, 1fr);
+  }
+  .stage.show-safe-only .library.naive,
+  .stage.show-naive-only .library.safe {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.85);
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: hidden;
+  }
+  .stage.show-safe-only .divider,
+  .stage.show-naive-only .divider {
+    opacity: 0;
+    width: 0;
+    margin: 0;
+  }
+
   .library .prefix-pill {
     display: inline-block;
     margin-top: 10px;
     font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
-    font-size: 11px;
+    font-size: 13px;
     background: var(--ink);
     color: var(--gold);
     padding: 3px 10px;
@@ -173,7 +265,7 @@
     transform: translate(-50%, -50%);
     background: var(--parchment);
     color: var(--gold-deep);
-    font-size: 18px;
+    font-size: 22px;
     padding: 8px 0;
   }
 
@@ -206,7 +298,7 @@
     color: var(--gold);
     display: flex; align-items: center; justify-content: center;
     font-family: 'IM Fell English SC', serif;
-    font-size: 13px;
+    font-size: 16px;
     letter-spacing: 0.04em;
     border: 1.5px solid var(--gold);
     flex-shrink: 0;
@@ -214,7 +306,7 @@
   .reader-name {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: 18px;
+    font-size: 22px;
     color: var(--ink);
     line-height: 1.1;
   }
@@ -222,13 +314,13 @@
     font-family: 'EB Garamond', serif;
     font-style: italic;
     color: var(--sepia);
-    font-size: 13px;
+    font-size: 16px;
     margin-top: 2px;
   }
   .reader-rows {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: 26px;
+    font-size: 32px;
     color: var(--ink);
     line-height: 1;
     text-align: right;
@@ -237,13 +329,13 @@
     font-family: 'EB Garamond', serif;
     font-style: italic;
     font-weight: 400;
-    font-size: 12px;
+    font-size: 15px;
     color: var(--sepia);
     margin-left: 5px;
   }
   .reader-error {
     font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
-    font-size: 12px;
+    font-size: 15px;
     color: var(--rose);
     background: rgba(196,72,90,0.06);
     padding: 4px 8px;
@@ -251,7 +343,7 @@
   }
   .reader-outcome {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
+    font-size: 19px;
     padding: 8px 0;
     border-top: 1px dotted var(--sepia-soft);
     margin-bottom: 4px;
@@ -267,7 +359,7 @@
   .outcome-partial .outcome-label { color: var(--gold-deep); }
   .outcome-calamity .outcome-label { color: var(--rose); }
   .outcome-sub {
-    font-style: italic; color: var(--sepia); font-size: 13px;
+    font-style: italic; color: var(--sepia); font-size: 16px;
   }
 
   /* ── Aggregates ────────────────────────────────────────── */
@@ -285,7 +377,7 @@
   }
   .agg-block-label {
     font-family: 'IM Fell English SC', serif;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.2em;
     color: var(--gold-deep);
     margin-bottom: 6px;
@@ -295,7 +387,7 @@
     grid-template-columns: 1fr 1fr auto;
     gap: 8px;
     align-items: center;
-    font-size: 13px;
+    font-size: 16px;
     padding: 2px 0;
   }
   .agg-row .val {
@@ -318,14 +410,14 @@
   .library.naive .agg-row .bar-fill { background: var(--rose); }
   .agg-row .cnt {
     font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--sepia);
   }
   .agg-empty {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     color: var(--sepia);
-    font-size: 13px;
+    font-size: 16px;
     text-align: center;
     padding: 6px;
   }
@@ -342,7 +434,7 @@
   }
   .ledger-title {
     font-family: 'IM Fell English SC', serif;
-    font-size: 18px;
+    font-size: 22px;
     color: var(--gold-deep);
     letter-spacing: 0.2em;
     text-align: center;
@@ -351,7 +443,7 @@
   .ledger-quote {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 17px;
+    font-size: 21px;
     color: var(--ink);
     text-align: center;
     padding: 0 24px;
@@ -368,7 +460,7 @@
   }
   .ledger-col h3 {
     font-family: 'IM Fell English SC', serif;
-    font-size: 14px;
+    font-size: 17px;
     letter-spacing: 0.16em;
     margin: 0 0 8px;
   }
@@ -376,7 +468,7 @@
   .ledger-col.naive h3 { color: var(--rose); }
   .ledger-stat {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 36px;
+    font-size: 42px;
     font-weight: 600;
     margin: 8px 0 4px;
   }
@@ -386,7 +478,7 @@
     font-family: 'EB Garamond', serif;
     font-style: italic;
     color: var(--sepia);
-    font-size: 14px;
+    font-size: 17px;
   }
 
   footer {
@@ -396,7 +488,117 @@
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     color: var(--sepia);
-    font-size: 13px;
+    font-size: 16px;
+  }
+
+  /* ── Tabs (Demo Results / Benchmarks) ────────────────────── */
+  .tabs {
+    max-width: 1280px;
+    margin: 0 auto 24px;
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 0;
+  }
+  .tab {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 16px;
+    letter-spacing: 0.16em;
+    padding: 12px 22px;
+    background: transparent;
+    border: 1.5px solid var(--sepia-soft);
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    color: var(--sepia);
+    cursor: pointer;
+    transition: all 180ms ease;
+    margin-bottom: -2px;  /* sit on top of the gold border */
+  }
+  .tab:hover {
+    background: var(--parchment-2);
+    color: var(--ink);
+  }
+  .tab.active {
+    background: var(--ink);
+    color: var(--gold);
+    border-color: var(--ink);
+    border-bottom: 2px solid var(--ink);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Benchmarks tab cards ────────────────────────────────── */
+  .bench-intro {
+    max-width: 1100px;
+    margin: 0 auto 24px;
+    text-align: center;
+  }
+  .bench-h2 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 27px;
+    color: var(--ink);
+    margin: 0 0 10px;
+    letter-spacing: 0.04em;
+  }
+  .bench-p {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 19px;
+    color: var(--sepia);
+    margin: 0;
+  }
+  .bench-card {
+    max-width: 1100px;
+    margin: 0 auto 28px;
+    background: var(--cream);
+    border: 1.5px solid var(--sepia-soft);
+    border-top: 5px solid var(--gold);
+    border-radius: 2px;
+    padding: 22px 26px 26px;
+    box-shadow: 0 4px 12px rgba(44,24,16,0.08);
+  }
+  .bench-h3 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 22px;
+    color: var(--gold-deep);
+    margin: 0 0 6px;
+    letter-spacing: 0.06em;
+  }
+  .bench-finding {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: var(--ink);
+    margin: 0 0 18px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+  .chart-box {
+    position: relative;
+    height: 280px;
+    background: rgba(255,255,255,0.4);
+    border: 1px dotted var(--sepia-soft);
+    border-radius: 2px;
+    padding: 14px;
+  }
+  .chart-box.tall { height: 360px; }
+  .bench-footer {
+    max-width: 1100px;
+    margin: 30px auto 0;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 16px;
+  }
+  .bench-footer code {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 15px;
+    background: var(--cream);
+    border: 1px solid var(--sepia-soft);
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-style: normal;
   }
 
   @media (max-width: 880px) {
@@ -407,7 +609,7 @@
       background-size: 100% 1.5px;
     }
     .ledger-cols { grid-template-columns: 1fr; }
-    h1.title { font-size: 28px; }
+    h1.title { font-size: 34px; }
   }
 </style>
 </head>
@@ -423,16 +625,31 @@
     </div>
   </div>
 
-  <div class="stage">
+  <nav class="tabs">
+    <button class="tab active" data-tab="demo">Demo Results</button>
+    <button class="tab" data-tab="benchmarks">Benchmarks</button>
+  </nav>
 
-    <section class="library safe">
-      <header class="library-head">
-        <div class="library-chapter">CHAPTER THE FIRST</div>
-        <h2 class="library-title">The Manifested Gentleman</h2>
-        <div class="library-sub">Mr. Darcy publishes via the manifest, atomically and in private.</div>
-        <div class="prefix-pill">published/demo/latest.json</div>
-      </header>
-      
+  <section class="tab-content active" data-tab-content="demo">
+
+    <div class="view-toggle">
+      <span class="view-toggle-label">Show:</span>
+      <button class="view-btn active" data-view="both">Both libraries</button>
+      <button class="view-btn" data-view="safe">Mr. Darcy only (safe)</button>
+      <button class="view-btn" data-view="naive">Mr. Wickham only (naive)</button>
+    </div>
+
+    <div class="stage" id="stage">
+
+      <section class="library safe">
+        <header class="library-head">
+          <div class="library-chapter">CHAPTER THE FIRST</div>
+          <h2 class="library-title">The Manifested Gentleman</h2>
+          <div class="library-method">SAFE PUBLISHING · <code>publish()</code></div>
+          <div class="library-sub">Mr. Darcy stages new data, validates it, then atomically flips the manifest pointer.</div>
+          <div class="prefix-pill">published/demo/latest.json</div>
+        </header>
+        
     <article class="reader-card outcome-v1">
       <header class="reader-card-head">
         <div class="reader-avatar">EB</div>
@@ -740,18 +957,19 @@
       </div>
       </div>
     </article>
-    </section>
+      </section>
 
-    <div class="divider"></div>
+      <div class="divider"></div>
 
-    <section class="library naive">
-      <header class="library-head">
-        <div class="library-chapter">CHAPTER THE SECOND</div>
-        <h2 class="library-title">The Impetuous Overwriter</h2>
-        <div class="library-sub">Mr. Wickham deletes curated/ and writes in place. No safety net.</div>
-        <div class="prefix-pill">curated/demo/</div>
-      </header>
-      
+      <section class="library naive">
+        <header class="library-head">
+          <div class="library-chapter">CHAPTER THE SECOND</div>
+          <h2 class="library-title">The Impetuous Overwriter</h2>
+          <div class="library-method naive">NAIVE PUBLISHING · <code>naive_publish()</code></div>
+          <div class="library-sub">Mr. Wickham deletes the curated dataset, then re-uploads in place. No manifest.</div>
+          <div class="prefix-pill">curated/demo/</div>
+        </header>
+        
     <article class="reader-card outcome-calamity">
       <header class="reader-card-head">
         <div class="reader-avatar">EB</div>
@@ -997,33 +1215,217 @@
       </div>
       </div>
     </article>
-    </section>
+      </section>
 
-  </div>
+    </div>
 
-  <div class="ledger">
-    <div class="ledger-title">❦  THE LEDGER OF CONSEQUENCES  ❦</div>
-    <p class="ledger-quote">
-      &ldquo;It is a truth universally acknowledged, that a dataset in possession
-      of a good manifest must be in want of no readers in distress.&rdquo;
-    </p>
-    <div class="ledger-cols">
-      <div class="ledger-col safe">
-        <h3>Mr. Darcy's Library</h3>
-        <div class="ledger-stat">4/4</div>
-        <div class="ledger-detail">enquiries answered without incident</div>
-      </div>
-      <div class="ledger-col naive">
-        <h3>Mr. Wickham's Library</h3>
-        <div class="ledger-stat">£900</div>
-        <div class="ledger-detail">in damages from 1 calamities &amp; 2 partial readings</div>
+    <div class="ledger">
+      <div class="ledger-title">❦  THE LEDGER OF CONSEQUENCES  ❦</div>
+      <p class="ledger-quote">
+        &ldquo;It is a truth universally acknowledged, that a dataset in possession
+        of a good manifest must be in want of no readers in distress.&rdquo;
+      </p>
+      <div class="ledger-cols">
+        <div class="ledger-col safe">
+          <h3>Mr. Darcy's Library</h3>
+          <div class="ledger-stat">4/4</div>
+          <div class="ledger-detail">enquiries answered without incident</div>
+        </div>
+        <div class="ledger-col naive">
+          <h3>Mr. Wickham's Library</h3>
+          <div class="ledger-stat">£900</div>
+          <div class="ledger-detail">in damages from 1 calamities &amp; 2 partial readings</div>
+        </div>
       </div>
     </div>
-  </div>
+
+  </section>
+
+  <section class="tab-content" data-tab-content="benchmarks">
+    <div class="bench-intro">
+      <h2 class="bench-h2">Empirical Findings</h2>
+      <p class="bench-p">
+        Three measurements taken across 329 benchmark runs on S3 and Azure.
+        Datasets sized Small (~3.6M rows), Medium (~17.9M rows), Large (~35.8M rows).
+      </p>
+    </div>
+
+    <div class="bench-card">
+      <h3 class="bench-h3">Publishing Overhead</h3>
+      <p class="bench-finding">
+        Validation and manifest writing add only milliseconds to a publish operation —
+        a negligible cost compared to the upload itself, which takes seconds to minutes.
+        The manifest is essentially free.
+      </p>
+      <div class="chart-box"><canvas id="chart-overhead"></canvas></div>
+    </div>
+
+    <div class="bench-card">
+      <h3 class="bench-h3">Transfer Throughput: S3 vs Azure</h3>
+      <p class="bench-finding">
+        Both backends achieve comparable throughput. Differences become more visible
+        on larger datasets due to network and concurrency factors.
+      </p>
+      <div class="chart-box"><canvas id="chart-throughput"></canvas></div>
+    </div>
+
+    <div class="bench-card">
+      <h3 class="bench-h3">Scan Selectivity (Predicate Pushdown)</h3>
+      <p class="bench-finding">
+        Scan time does not always shrink with row selectivity. Queries that match few rows
+        can still pay the full file-listing and metadata cost, while queries matching many
+        rows benefit from streaming reads. Predicate pushdown matters most when filter
+        columns align with parquet's row-group statistics.
+      </p>
+      <div class="chart-box tall"><canvas id="chart-selectivity"></canvas></div>
+    </div>
+
+    <div class="bench-footer">
+      Charts rendered from <code>results.csv</code> at report generation time.
+    </div>
+  </section>
 
   <footer>
     Generated by demo.py · Pride &amp; Prejudice themed dataset versioning demo
   </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Tab switching
+  const tabs = document.querySelectorAll('.tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  const BENCH = {"publish": {"s3": {"validation": [2337.3, 6785.0, 13384.2], "metadata": [341.4, 379.4, 411.6], "labels": ["S", "M", "L"], "total_seconds": [2.68, 7.16, 13.8]}, "azure": {"validation": [], "metadata": [], "labels": [], "total_seconds": []}}, "upload": {"sizes": ["S", "M", "L"], "s3": [9.9, 32.1, 30.3], "azure": [18.0, 46.0, 6.6], "s3_seconds": [99.65, 148.53, 317.01], "azure_seconds": [80.54, 104.67, 1464.67]}, "scan": {"presets": ["v1", "v2", "v3", "v4", "v5", "v6", "v7"], "scan_ms": [282947.0, 274716.9, 279463.7, 267067.3, 279986.3, 282008.2, 281165.0], "agg_ms": [35.1, 24.0, 19.5, 17.3, 550.3, 75.2, 28.2], "rows_matched": [2230413, 1304621, 279791, 186097, 18044597, 4472189, 2238201], "rows_scanned": [35800000, 35800000, 35800000, 35800000, 35800000, 35800000, 35800000]}, "scan_scaling": {"sizes": ["S", "M", "L"], "presets": ["v1", "v2", "v3", "v4", "v5", "v6", "v7"], "data": {"v1": [28.2, 187.9, 282.9], "v2": [28.6, 155.1, 274.7], "v3": [30.6, 150.5, 279.5], "v4": [32.1, 153.5, 267.1], "v5": [32.2, 161.9, 280.0], "v6": [32.0, 151.9, 282.0], "v7": [31.0, 138.9, 281.2]}}, "row_count": 329};
+  let chartsRendered = false;
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+      tabContents.forEach(c => c.classList.toggle('active', c.dataset.tabContent === target));
+      if (target === 'benchmarks' && !chartsRendered && BENCH) {
+        renderCharts();
+        chartsRendered = true;
+      }
+    });
+  });
+
+  // View toggle (show both / Darcy only / Wickham only)
+  const viewBtns = document.querySelectorAll('.view-btn');
+  const stageEl = document.getElementById('stage');
+  viewBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      viewBtns.forEach(b => b.classList.toggle('active', b === btn));
+      stageEl.classList.remove('show-safe-only', 'show-naive-only');
+      if (view === 'safe')  stageEl.classList.add('show-safe-only');
+      if (view === 'naive') stageEl.classList.add('show-naive-only');
+    });
+  });
+
+  function renderCharts() {
+    if (typeof Chart === 'undefined' || !BENCH) return;
+
+    // Regency-themed defaults
+    Chart.defaults.font.family = "'EB Garamond', 'Georgia', serif";
+    Chart.defaults.color = '#2C1810';
+    Chart.defaults.font.size = 13;
+
+    const COLOURS = {
+      sage:  '#5C7A4E', sageBg: '#A8BFA0',
+      rose:  '#C4485A', roseBg: '#D89AA4',
+      gold:  '#C9A84C', sepia: '#8B6914',
+      ink:   '#2C1810', cream: '#FAF4E8',
+    };
+
+    // Chart 1: publishing overhead — stacked bars per size, S3 only
+    const pub = BENCH.publish.s3;
+    if (pub && pub.labels && pub.labels.length) {
+      new Chart(document.getElementById('chart-overhead'), {
+        type: 'bar',
+        data: {
+          labels: pub.labels.map(s => `Size ${s}`),
+          datasets: [
+            { label: 'Validation (ms)',      data: pub.validation, backgroundColor: COLOURS.sage },
+            { label: 'Manifest write (ms)',  data: pub.metadata,   backgroundColor: COLOURS.gold },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Manifest-writing overhead (S3, milliseconds)', font: { size: 15, weight: 'normal' } },
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: 'ms (lower is better)' } }
+          }
+        }
+      });
+    }
+
+    // Chart 2: throughput S3 vs Azure
+    const up = BENCH.upload;
+    if (up && up.sizes && up.sizes.length) {
+      new Chart(document.getElementById('chart-throughput'), {
+        type: 'bar',
+        data: {
+          labels: up.sizes.map(s => `Size ${s}`),
+          datasets: [
+            { label: 'S3',    data: up.s3,    backgroundColor: COLOURS.sage },
+            { label: 'Azure', data: up.azure, backgroundColor: COLOURS.rose },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Upload throughput (MB/s, higher is better)', font: { size: 15, weight: 'normal' } },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: 'MB/s' } }
+          }
+        }
+      });
+    }
+
+    // Chart 3: scan selectivity — scan_ms bars + rows_matched line
+    const sc = BENCH.scan;
+    if (sc && sc.presets && sc.presets.length) {
+      new Chart(document.getElementById('chart-selectivity'), {
+        data: {
+          labels: sc.presets,
+          datasets: [
+            {
+              type: 'bar', label: 'Scan time (ms)',
+              data: sc.scan_ms, backgroundColor: COLOURS.sage, yAxisID: 'y',
+              order: 2,
+            },
+            {
+              type: 'line', label: 'Rows matched',
+              data: sc.rows_matched, borderColor: COLOURS.rose,
+              backgroundColor: COLOURS.rose, yAxisID: 'y1',
+              pointRadius: 5, pointStyle: 'circle', borderWidth: 2,
+              tension: 0.2, order: 1,
+            },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Scan time vs rows matched, by query preset (S3, Large)', font: { size: 15, weight: 'normal' } },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y:  { position: 'left',  beginAtZero: true, title: { display: true, text: 'Scan time (ms)' } },
+            y1: { position: 'right', beginAtZero: true, title: { display: true, text: 'Rows matched' }, grid: { display: false } },
+          }
+        }
+      });
+    }
+  }
+</script>
 
 </body>
 </html>
