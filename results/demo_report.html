@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A Tale of Two Publishing Methods · Demo Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment:  #F5ECD7;
+    --parchment-2:#EFE4C8;
+    --cream:      #FAF4E8;
+    --ink:        #2C1810;
+    --sepia:      #8B6914;
+    --sepia-soft: #B89968;
+    --gold:       #C9A84C;
+    --gold-deep:  #8B6914;
+    --sage:       #5C7A4E;
+    --sage-bg:    #DDE5D5;
+    --sage-soft:  #A8BFA0;
+    --rose:       #C4485A;
+    --rose-bg:    #ECD5D9;
+    --rose-soft:  #D89AA4;
+    --dusty-blue: #4A6FA5;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'EB Garamond', 'Georgia', serif;
+    background-color: var(--parchment);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.4 0 0 0 0 0.1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    color: var(--ink);
+    padding: 32px 20px 80px;
+    min-height: 100vh;
+  }
+
+  /* ── Title block ───────────────────────────────────────── */
+  .title-block {
+    max-width: 1100px;
+    margin: 0 auto 28px;
+    text-align: center;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--gold);
+    position: relative;
+  }
+  .title-block::after {
+    content: '❦';
+    position: absolute;
+    bottom: -12px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--parchment);
+    padding: 0 16px;
+    color: var(--gold-deep);
+    font-size: 18px;
+  }
+  h1.title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 38px;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    margin: 0 0 8px;
+    line-height: 1.15;
+  }
+  .subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--sepia);
+    margin: 0;
+    line-height: 1.4;
+  }
+  .meta-row {
+    margin-top: 14px;
+    display: flex; justify-content: center; gap: 18px;
+    flex-wrap: wrap;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--sepia);
+  }
+  .meta-row .pill {
+    background: var(--cream);
+    border: 1px solid var(--sepia-soft);
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--ink);
+  }
+
+  /* ── Stage with two libraries ──────────────────────────── */
+  .stage {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  .library {
+    background: var(--cream);
+    border: 1.5px solid var(--sepia-soft);
+    border-radius: 2px;
+    padding: 24px;
+    box-shadow:
+      inset 0 0 0 1px var(--cream),
+      inset 0 0 0 2px var(--sepia-soft),
+      0 4px 12px rgba(44,24,16,0.08);
+  }
+  .library.safe  { border-top: 5px solid var(--sage); }
+  .library.naive { border-top: 5px solid var(--rose); }
+
+  .library-head {
+    text-align: center;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px dotted var(--sepia-soft);
+  }
+  .library-chapter {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    color: var(--gold-deep);
+    letter-spacing: 0.22em;
+    margin-bottom: 6px;
+  }
+  .library-title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 24px;
+    color: var(--ink);
+    margin: 0 0 4px;
+    letter-spacing: 0.02em;
+  }
+  .library-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 15px;
+  }
+  .library .prefix-pill {
+    display: inline-block;
+    margin-top: 10px;
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    background: var(--ink);
+    color: var(--gold);
+    padding: 3px 10px;
+    border-radius: 2px;
+    border: 1px solid var(--gold);
+  }
+  .library.naive .prefix-pill {
+    color: var(--rose-soft);
+    border-color: var(--rose-soft);
+  }
+
+  /* ── Vertical divider with ornament ────────────────────── */
+  .divider {
+    width: 40px;
+    margin: 30px 0;
+    position: relative;
+    background: linear-gradient(to bottom, transparent, var(--gold) 8%, var(--gold) 92%, transparent);
+    background-size: 1.5px 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .divider::before {
+    content: '❦';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--parchment);
+    color: var(--gold-deep);
+    font-size: 18px;
+    padding: 8px 0;
+  }
+
+  /* ── Reader cards ──────────────────────────────────────── */
+  .reader-card {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--sepia-soft);
+    border-left: 4px solid var(--sepia-soft);
+    border-radius: 0 3px 3px 0;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(44,24,16,0.06);
+  }
+  .reader-card.outcome-v1      { border-left-color: var(--sage); }
+  .reader-card.outcome-v2      { border-left-color: var(--sage); background: linear-gradient(to right, var(--sage-bg) 0, rgba(255,255,255,0.6) 60%); }
+  .reader-card.outcome-partial { border-left-color: #C9A84C; background: linear-gradient(to right, #F5E9C8 0, rgba(255,255,255,0.6) 60%); }
+  .reader-card.outcome-calamity{ border-left-color: var(--rose); background: linear-gradient(to right, var(--rose-bg) 0, rgba(255,255,255,0.6) 60%); }
+
+  .reader-card-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .reader-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    border: 1.5px solid var(--gold);
+    flex-shrink: 0;
+  }
+  .reader-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .reader-time {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .reader-rows {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1;
+    text-align: right;
+  }
+  .reader-rows-sub {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--sepia);
+    margin-left: 5px;
+  }
+  .reader-error {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: var(--rose);
+    background: rgba(196,72,90,0.06);
+    padding: 4px 8px;
+    border-radius: 2px;
+  }
+  .reader-outcome {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    padding: 8px 0;
+    border-top: 1px dotted var(--sepia-soft);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .outcome-label { font-weight: 600; }
+  .outcome-v1      .outcome-label { color: var(--sage); }
+  .outcome-v2      .outcome-label { color: var(--sage); }
+  .outcome-partial .outcome-label { color: var(--gold-deep); }
+  .outcome-calamity .outcome-label { color: var(--rose); }
+  .outcome-sub {
+    font-style: italic; color: var(--sepia); font-size: 13px;
+  }
+
+  /* ── Aggregates ────────────────────────────────────────── */
+  .reader-aggs {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .agg-block {
+    background: rgba(255,255,255,0.4);
+    border: 1px solid var(--sepia-soft);
+    border-radius: 2px;
+    padding: 8px 10px;
+  }
+  .agg-block-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--gold-deep);
+    margin-bottom: 6px;
+  }
+  .agg-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+    padding: 2px 0;
+  }
+  .agg-row .val {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .agg-row .bar {
+    height: 6px;
+    background: rgba(139,105,20,0.12);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .agg-row .bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--sage);
+    border-radius: 100px;
+  }
+  .library.naive .agg-row .bar-fill { background: var(--rose); }
+  .agg-row .cnt {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    color: var(--sepia);
+  }
+  .agg-empty {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 13px;
+    text-align: center;
+    padding: 6px;
+  }
+
+  /* ── Ledger at the bottom ──────────────────────────────── */
+  .ledger {
+    max-width: 1100px;
+    margin: 40px auto 0;
+    background: var(--cream);
+    border: 1.5px solid var(--gold);
+    border-radius: 2px;
+    padding: 28px;
+    box-shadow: 0 6px 20px rgba(139,105,20,0.15);
+  }
+  .ledger-title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 18px;
+    color: var(--gold-deep);
+    letter-spacing: 0.2em;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .ledger-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink);
+    text-align: center;
+    padding: 0 24px;
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+  .ledger-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .ledger-col {
+    text-align: center;
+  }
+  .ledger-col h3 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    margin: 0 0 8px;
+  }
+  .ledger-col.safe  h3 { color: var(--sage); }
+  .ledger-col.naive h3 { color: var(--rose); }
+  .ledger-stat {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    margin: 8px 0 4px;
+  }
+  .ledger-col.safe  .ledger-stat { color: var(--sage); }
+  .ledger-col.naive .ledger-stat { color: var(--rose); }
+  .ledger-detail {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 14px;
+  }
+
+  footer {
+    max-width: 1100px;
+    margin: 30px auto 0;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 13px;
+  }
+
+  @media (max-width: 880px) {
+    .stage { grid-template-columns: 1fr; }
+    .divider {
+      width: 100%; height: 30px; margin: 16px 0;
+      background: linear-gradient(to right, transparent, var(--gold) 8%, var(--gold) 92%, transparent);
+      background-size: 100% 1.5px;
+    }
+    .ledger-cols { grid-template-columns: 1fr; }
+    h1.title { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="title-block">
+    <h1 class="title">A Tale of Two Publishing Methods</h1>
+    <p class="subtitle">In which manifests, like good manners, prevent considerable embarrassment.</p>
+    <div class="meta-row">
+      <span class="pill">s3://ccbd-project-423937245826-eu-north-1-an/demo/</span>
+      <span>v1: 3,500 rows</span>
+      <span>v2: 5,000 rows</span>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <section class="library safe">
+      <header class="library-head">
+        <div class="library-chapter">CHAPTER THE FIRST</div>
+        <h2 class="library-title">The Manifested Gentleman</h2>
+        <div class="library-sub">Mr. Darcy publishes via the manifest, atomically and in private.</div>
+        <div class="prefix-pill">published/demo/latest.json</div>
+      </header>
+      
+    <article class="reader-card outcome-v1">
+      <header class="reader-card-head">
+        <div class="reader-avatar">EB</div>
+        <div class="reader-meta">
+          <div class="reader-name">Miss Elizabeth</div>
+          <div class="reader-time">enquired at t = 0.2s</div>
+        </div>
+        <div class='reader-rows'>3,500<span class='reader-rows-sub'>rows</span></div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">✓  Volume the First, intact</span>
+        <span class="outcome-sub">3,500 rows</span>
+      </div>
+      <div class="reader-aggs">
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Moods</div>
+        
+        <div class="agg-row">
+          <span class="val">swooning</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">321</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">amused</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">306</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">bewildered</span>
+          <span class="bar"><span class="bar-fill" style="width:94%"></span></span>
+          <span class="cnt">301</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Events</div>
+        
+        <div class="agg-row">
+          <span class="val">dramatic_hand_flex</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">258</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">piano_played_badly</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">250</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">awkward_silence</span>
+          <span class="bar"><span class="bar-fill" style="width:94%"></span></span>
+          <span class="cnt">243</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Characters</div>
+        
+        <div class="agg-row">
+          <span class="val">Lydia Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">238</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Mrs. Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">237</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Kitty Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">231</span>
+        </div>
+      </div>
+      </div>
+    </article>
+
+    <article class="reader-card outcome-v1">
+      <header class="reader-card-head">
+        <div class="reader-avatar">JB</div>
+        <div class="reader-meta">
+          <div class="reader-name">Miss Jane</div>
+          <div class="reader-time">enquired at t = 1.2s</div>
+        </div>
+        <div class='reader-rows'>3,500<span class='reader-rows-sub'>rows</span></div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">✓  Volume the First, intact</span>
+        <span class="outcome-sub">3,500 rows</span>
+      </div>
+      <div class="reader-aggs">
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Moods</div>
+        
+        <div class="agg-row">
+          <span class="val">swooning</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">321</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">amused</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">306</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">bewildered</span>
+          <span class="bar"><span class="bar-fill" style="width:94%"></span></span>
+          <span class="cnt">301</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Events</div>
+        
+        <div class="agg-row">
+          <span class="val">dramatic_hand_flex</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">258</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">piano_played_badly</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">250</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">awkward_silence</span>
+          <span class="bar"><span class="bar-fill" style="width:94%"></span></span>
+          <span class="cnt">243</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Characters</div>
+        
+        <div class="agg-row">
+          <span class="val">Lydia Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">238</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Mrs. Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">237</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Kitty Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">231</span>
+        </div>
+      </div>
+      </div>
+    </article>
+
+    <article class="reader-card outcome-v1">
+      <header class="reader-card-head">
+        <div class="reader-avatar">MB</div>
+        <div class="reader-meta">
+          <div class="reader-name">Miss Mary</div>
+          <div class="reader-time">enquired at t = 2.0s</div>
+        </div>
+        <div class='reader-rows'>3,500<span class='reader-rows-sub'>rows</span></div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">✓  Volume the First, intact</span>
+        <span class="outcome-sub">3,500 rows</span>
+      </div>
+      <div class="reader-aggs">
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Moods</div>
+        
+        <div class="agg-row">
+          <span class="val">swooning</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">321</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">amused</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">306</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">bewildered</span>
+          <span class="bar"><span class="bar-fill" style="width:94%"></span></span>
+          <span class="cnt">301</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Events</div>
+        
+        <div class="agg-row">
+          <span class="val">dramatic_hand_flex</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">258</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">piano_played_badly</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">250</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">awkward_silence</span>
+          <span class="bar"><span class="bar-fill" style="width:94%"></span></span>
+          <span class="cnt">243</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Characters</div>
+        
+        <div class="agg-row">
+          <span class="val">Lydia Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">238</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Mrs. Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">237</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Kitty Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">231</span>
+        </div>
+      </div>
+      </div>
+    </article>
+
+    <article class="reader-card outcome-v2">
+      <header class="reader-card-head">
+        <div class="reader-avatar">LC</div>
+        <div class="reader-meta">
+          <div class="reader-name">Lady Catherine</div>
+          <div class="reader-time">enquired at t = 3.8s</div>
+        </div>
+        <div class='reader-rows'>5,000<span class='reader-rows-sub'>rows</span></div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">✓  Volume the Second, atomically arrived</span>
+        <span class="outcome-sub">5,000 rows</span>
+      </div>
+      <div class="reader-aggs">
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Moods</div>
+        
+        <div class="agg-row">
+          <span class="val">delighted</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">441</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">scandalized</span>
+          <span class="bar"><span class="bar-fill" style="width:99%"></span></span>
+          <span class="cnt">437</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">furious</span>
+          <span class="bar"><span class="bar-fill" style="width:98%"></span></span>
+          <span class="cnt">432</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Events</div>
+        
+        <div class="agg-row">
+          <span class="val">gossip_spread</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">354</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">piano_played_badly</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">338</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">dramatic_hand_flex</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">335</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Characters</div>
+        
+        <div class="agg-row">
+          <span class="val">Caroline Bingley</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">339</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Elizabeth Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:99%"></span></span>
+          <span class="cnt">334</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Colonel Fitzwilliam</span>
+          <span class="bar"><span class="bar-fill" style="width:96%"></span></span>
+          <span class="cnt">327</span>
+        </div>
+      </div>
+      </div>
+    </article>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="library naive">
+      <header class="library-head">
+        <div class="library-chapter">CHAPTER THE SECOND</div>
+        <h2 class="library-title">The Impetuous Overwriter</h2>
+        <div class="library-sub">Mr. Wickham deletes curated/ and writes in place. No safety net.</div>
+        <div class="prefix-pill">curated/demo/</div>
+      </header>
+      
+    <article class="reader-card outcome-calamity">
+      <header class="reader-card-head">
+        <div class="reader-avatar">EB</div>
+        <div class="reader-meta">
+          <div class="reader-name">Miss Elizabeth</div>
+          <div class="reader-time">enquired at t = 0.2s</div>
+        </div>
+        <div class='reader-error'>ccbd-project-423937245826-eu-north-1-an/curated/demo</div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">✕  CALAMITY</span>
+        <span class="outcome-sub">the dataset has vanished entirely</span>
+      </div>
+    </article>
+
+    <article class="reader-card outcome-partial">
+      <header class="reader-card-head">
+        <div class="reader-avatar">JB</div>
+        <div class="reader-meta">
+          <div class="reader-name">Miss Jane</div>
+          <div class="reader-time">enquired at t = 1.2s</div>
+        </div>
+        <div class='reader-rows'>1,000<span class='reader-rows-sub'>rows</span></div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">⚠  Partial reading</span>
+        <span class="outcome-sub">1,000 rows (expected ~5,000)</span>
+      </div>
+      <div class="reader-aggs">
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Moods</div>
+        
+        <div class="agg-row">
+          <span class="val">scandalized</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">99</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">mortified</span>
+          <span class="bar"><span class="bar-fill" style="width:96%"></span></span>
+          <span class="cnt">95</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">vexed</span>
+          <span class="bar"><span class="bar-fill" style="width:85%"></span></span>
+          <span class="cnt">84</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Events</div>
+        
+        <div class="agg-row">
+          <span class="val">fortune_discussed</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">74</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">gossip_spread</span>
+          <span class="bar"><span class="bar-fill" style="width:96%"></span></span>
+          <span class="cnt">71</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">awkward_silence</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">70</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Characters</div>
+        
+        <div class="agg-row">
+          <span class="val">Caroline Bingley</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">76</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Lydia Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">76</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Elizabeth Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:93%"></span></span>
+          <span class="cnt">71</span>
+        </div>
+      </div>
+      </div>
+    </article>
+
+    <article class="reader-card outcome-partial">
+      <header class="reader-card-head">
+        <div class="reader-avatar">MB</div>
+        <div class="reader-meta">
+          <div class="reader-name">Miss Mary</div>
+          <div class="reader-time">enquired at t = 2.0s</div>
+        </div>
+        <div class='reader-rows'>2,000<span class='reader-rows-sub'>rows</span></div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">⚠  Partial reading</span>
+        <span class="outcome-sub">2,000 rows (expected ~5,000)</span>
+      </div>
+      <div class="reader-aggs">
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Moods</div>
+        
+        <div class="agg-row">
+          <span class="val">scandalized</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">184</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">melancholy</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">179</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">impertinent</span>
+          <span class="bar"><span class="bar-fill" style="width:96%"></span></span>
+          <span class="cnt">176</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Events</div>
+        
+        <div class="agg-row">
+          <span class="val">dramatic_hand_flex</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">146</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">piano_played_badly</span>
+          <span class="bar"><span class="bar-fill" style="width:93%"></span></span>
+          <span class="cnt">136</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">gossip_spread</span>
+          <span class="bar"><span class="bar-fill" style="width:92%"></span></span>
+          <span class="cnt">134</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Characters</div>
+        
+        <div class="agg-row">
+          <span class="val">Caroline Bingley</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">148</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Elizabeth Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:97%"></span></span>
+          <span class="cnt">144</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Georgiana Darcy</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">140</span>
+        </div>
+      </div>
+      </div>
+    </article>
+
+    <article class="reader-card outcome-v2">
+      <header class="reader-card-head">
+        <div class="reader-avatar">LC</div>
+        <div class="reader-meta">
+          <div class="reader-name">Lady Catherine</div>
+          <div class="reader-time">enquired at t = 3.8s</div>
+        </div>
+        <div class='reader-rows'>5,000<span class='reader-rows-sub'>rows</span></div>
+      </header>
+      <div class="reader-outcome">
+        <span class="outcome-label">✓  Volume the Second, atomically arrived</span>
+        <span class="outcome-sub">5,000 rows</span>
+      </div>
+      <div class="reader-aggs">
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Moods</div>
+        
+        <div class="agg-row">
+          <span class="val">delighted</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">441</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">scandalized</span>
+          <span class="bar"><span class="bar-fill" style="width:99%"></span></span>
+          <span class="cnt">437</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">furious</span>
+          <span class="bar"><span class="bar-fill" style="width:98%"></span></span>
+          <span class="cnt">432</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Events</div>
+        
+        <div class="agg-row">
+          <span class="val">gossip_spread</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">354</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">piano_played_badly</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">338</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">dramatic_hand_flex</span>
+          <span class="bar"><span class="bar-fill" style="width:95%"></span></span>
+          <span class="cnt">335</span>
+        </div>
+      </div>
+        
+      <div class="agg-block">
+        <div class="agg-block-label">Top Characters</div>
+        
+        <div class="agg-row">
+          <span class="val">Caroline Bingley</span>
+          <span class="bar"><span class="bar-fill" style="width:100%"></span></span>
+          <span class="cnt">339</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Elizabeth Bennet</span>
+          <span class="bar"><span class="bar-fill" style="width:99%"></span></span>
+          <span class="cnt">334</span>
+        </div>
+        <div class="agg-row">
+          <span class="val">Colonel Fitzwilliam</span>
+          <span class="bar"><span class="bar-fill" style="width:96%"></span></span>
+          <span class="cnt">327</span>
+        </div>
+      </div>
+      </div>
+    </article>
+    </section>
+
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-title">❦  THE LEDGER OF CONSEQUENCES  ❦</div>
+    <p class="ledger-quote">
+      &ldquo;It is a truth universally acknowledged, that a dataset in possession
+      of a good manifest must be in want of no readers in distress.&rdquo;
+    </p>
+    <div class="ledger-cols">
+      <div class="ledger-col safe">
+        <h3>Mr. Darcy's Library</h3>
+        <div class="ledger-stat">4/4</div>
+        <div class="ledger-detail">enquiries answered without incident</div>
+      </div>
+      <div class="ledger-col naive">
+        <h3>Mr. Wickham's Library</h3>
+        <div class="ledger-stat">£900</div>
+        <div class="ledger-detail">in damages from 1 calamities &amp; 2 partial readings</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Generated by demo.py · Pride &amp; Prejudice themed dataset versioning demo
+  </footer>
+
+</body>
+</html>

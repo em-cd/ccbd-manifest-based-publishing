@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A Tale of Two Publishing Methods · Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment:  #F5ECD7;
+    --parchment-2:#EFE4C8;
+    --cream:      #FAF4E8;
+    --ink:        #2C1810;
+    --sepia:      #8B6914;
+    --sepia-soft: #B89968;
+    --gold:       #C9A84C;
+    --gold-deep:  #8B6914;
+    --sage:       #5C7A4E;
+    --sage-bg:    #DDE5D5;
+    --sage-soft:  #A8BFA0;
+    --rose:       #C4485A;
+    --rose-bg:    #ECD5D9;
+    --rose-soft:  #D89AA4;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'EB Garamond', 'Georgia', serif;
+    background-color: var(--parchment);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.4 0 0 0 0 0.1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    color: var(--ink);
+    padding: 28px 20px 80px;
+    min-height: 100vh;
+  }
+
+  /* ── Title ─────────────────────────────────────────────── */
+  .title-block {
+    max-width: 1280px;
+    margin: 0 auto 18px;
+    text-align: center;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--gold);
+    position: relative;
+  }
+  .title-block::after {
+    content: '❦';
+    position: absolute;
+    bottom: -12px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--parchment);
+    padding: 0 16px;
+    color: var(--gold-deep);
+    font-size: 18px;
+  }
+  h1.title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 34px;
+    margin: 0 0 6px;
+    letter-spacing: 0.04em;
+  }
+  .subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--sepia);
+    margin: 0;
+  }
+
+  /* ── Status bar (top) ──────────────────────────────────── */
+  .status-bar {
+    max-width: 1280px;
+    margin: 0 auto 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    background: var(--ink);
+    color: var(--parchment);
+    border: 2px solid var(--gold);
+    border-radius: 2px;
+    box-shadow: 0 6px 18px rgba(44,24,16,0.18);
+  }
+  .status-pill {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    background: var(--gold);
+    color: var(--ink);
+    padding: 4px 12px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .status-pill.done { background: var(--sage); color: var(--cream); }
+  .status-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    flex: 1;
+  }
+  .status-meta {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    background: rgba(0,0,0,0.25);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  /* ── Stage with two libraries ──────────────────────────── */
+  .stage {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  .library {
+    background: var(--cream);
+    border: 1.5px solid var(--sepia-soft);
+    border-radius: 2px;
+    padding: 22px;
+    box-shadow:
+      inset 0 0 0 1px var(--cream),
+      inset 0 0 0 2px var(--sepia-soft),
+      0 4px 12px rgba(44,24,16,0.08);
+  }
+  .library.safe  { border-top: 5px solid var(--sage); }
+  .library.naive { border-top: 5px solid var(--rose); }
+
+  .library-head {
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px dotted var(--sepia-soft);
+  }
+  .library-chapter {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    color: var(--gold-deep);
+    letter-spacing: 0.22em;
+    margin-bottom: 4px;
+  }
+  .library-title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+  .library-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 14px;
+  }
+  .prefix-pill {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    background: var(--ink);
+    color: var(--gold);
+    padding: 3px 10px;
+    border-radius: 2px;
+    border: 1px solid var(--gold);
+  }
+  .library.naive .prefix-pill { color: var(--rose-soft); border-color: var(--rose-soft); }
+
+  /* ── Writer status badge ──────────────────────────────── */
+  .writer-status {
+    margin: 8px 0 14px;
+    padding: 8px 12px;
+    border-radius: 2px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    text-align: center;
+    background: rgba(255,255,255,0.4);
+    border: 1px dotted var(--sepia-soft);
+    color: var(--sepia);
+    min-height: 35px;
+  }
+  .writer-status.active {
+    background: var(--sage-bg);
+    border-style: solid;
+    color: var(--ink);
+    border-color: var(--sage-soft);
+    animation: subtle-pulse 1.4s ease-in-out infinite;
+  }
+  .library.naive .writer-status.active {
+    background: var(--rose-bg);
+    border-color: var(--rose-soft);
+  }
+  @keyframes subtle-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(92,122,78,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(92,122,78,0); }
+  }
+  .library.naive .writer-status.active {
+    animation: subtle-pulse-rose 1.4s ease-in-out infinite;
+  }
+  @keyframes subtle-pulse-rose {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(196,72,90,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(196,72,90,0); }
+  }
+
+  /* ── Section labels ───────────────────────────────────── */
+  .section-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 13px;
+    color: var(--gold-deep);
+    letter-spacing: 0.18em;
+    margin: 16px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px dotted var(--sepia-soft);
+    display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .section-label .count {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    text-transform: none;
+    font-size: 13px;
+    color: var(--sepia);
+    letter-spacing: 0;
+  }
+
+  /* ── File list with fade-in animation ─────────────────── */
+  .filelist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 38px;
+    padding: 6px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+  }
+  .file {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 2px;
+    background: var(--sage-bg);
+    color: var(--ink);
+    border: 1px solid var(--sage-soft);
+    animation: file-fade-in 380ms cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .file.v1 { background: var(--parchment-2); border-color: var(--sepia-soft); }
+  .file.v2 { background: var(--sage-bg);     border-color: var(--sage-soft); }
+  .library.naive .file.v1 { background: var(--parchment-2); border-color: var(--sepia-soft); }
+  .library.naive .file.v2 { background: var(--rose-bg);     border-color: var(--rose-soft); }
+  .file.removing {
+    animation: file-fade-out 380ms cubic-bezier(0.7,0,1,0.7) forwards;
+  }
+  @keyframes file-fade-in {
+    from { opacity: 0; transform: translateY(-4px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes file-fade-out {
+    to { opacity: 0; transform: scale(0.7); padding-left: 0; padding-right: 0; margin: 0; width: 0; }
+  }
+  .empty-state {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    opacity: 0.6;
+    text-align: center;
+    padding: 6px;
+    font-size: 13px;
+    width: 100%;
+  }
+
+  /* ── Manifest pointer ─────────────────────────────────── */
+  .manifest-zone {
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--parchment-2);
+    border: 1px dashed var(--gold-deep);
+    border-radius: 2px;
+  }
+  .manifest-pointer {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+  }
+  .ptr-box {
+    background: var(--cream);
+    border: 2px solid var(--sepia-soft);
+    border-radius: 2px;
+    padding: 10px 12px;
+    text-align: center;
+    transition: all 400ms cubic-bezier(0.16,1,0.3,1);
+    opacity: 0.5;
+  }
+  .ptr-box .v {
+    display: block;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    color: var(--sepia);
+    letter-spacing: 0.15em;
+  }
+  .ptr-box .rows {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--ink);
+    margin-top: 2px;
+    line-height: 1;
+  }
+  .ptr-box .rows-sub {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--sepia);
+  }
+  .ptr-box.active {
+    background: var(--sage-bg);
+    border-color: var(--sage);
+    border-width: 3px;
+    opacity: 1;
+    transform: scale(1.06);
+    box-shadow: 0 4px 12px rgba(92,122,78,0.3);
+  }
+  .ptr-arrow {
+    font-family: 'IM Fell English SC', serif;
+    color: var(--gold-deep);
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .no-manifest {
+    margin: 14px 0;
+    text-align: center;
+    padding: 10px;
+    background: var(--rose-bg);
+    border: 1px dashed var(--rose);
+    color: var(--rose);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    border-radius: 2px;
+  }
+
+  /* ── Vertical divider ─────────────────────────────────── */
+  .divider {
+    width: 40px;
+    margin: 30px 0;
+    position: relative;
+    background: linear-gradient(to bottom, transparent, var(--gold) 8%, var(--gold) 92%, transparent);
+    background-size: 1.5px 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .divider::before {
+    content: '❦';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--parchment);
+    color: var(--gold-deep);
+    font-size: 18px;
+    padding: 8px 0;
+  }
+
+  /* ── Reader enquiry cards ─────────────────────────────── */
+  .enquiries {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 6px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+  }
+  .enquiry {
+    background: rgba(255,255,255,0.7);
+    border-left: 4px solid var(--sepia-soft);
+    border-radius: 0 2px 2px 0;
+    padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(44,24,16,0.06);
+    animation: slide-in 420ms cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .enquiry.ok-v1 { border-left-color: var(--sage); }
+  .enquiry.ok-v2 { border-left-color: var(--sage); background: linear-gradient(to right, var(--sage-bg) 0%, rgba(255,255,255,0.7) 60%); }
+  .enquiry.partial { border-left-color: var(--gold); background: linear-gradient(to right, #F5E9C8 0%, rgba(255,255,255,0.7) 60%); }
+  .enquiry.calamity { border-left-color: var(--rose); background: linear-gradient(to right, var(--rose-bg) 0%, rgba(255,255,255,0.7) 60%); }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .enquiry-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .reader-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--gold);
+    border: 1.5px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .reader-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.1;
+  }
+  .reader-time {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--sepia);
+  }
+  .reader-rows {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--ink);
+    line-height: 1;
+    text-align: right;
+  }
+  .reader-rows .sub {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--sepia);
+    margin-left: 4px;
+  }
+  .outcome-row {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dotted var(--sepia-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .outcome-label { font-weight: 600; }
+  .enquiry.ok-v1 .outcome-label, .enquiry.ok-v2 .outcome-label { color: var(--sage); }
+  .enquiry.partial .outcome-label  { color: var(--gold-deep); }
+  .enquiry.calamity .outcome-label { color: var(--rose); }
+  .outcome-sub { font-style: italic; color: var(--sepia); font-size: 12px; }
+
+  .top-mood {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'EB Garamond', serif;
+    font-size: 12px;
+    color: var(--sepia);
+    font-style: italic;
+  }
+  .top-mood-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    color: var(--ink);
+    font-style: normal;
+  }
+
+  /* ── Ledger (appears at end) ──────────────────────────── */
+  .ledger {
+    max-width: 1100px;
+    margin: 40px auto 0;
+    background: var(--cream);
+    border: 1.5px solid var(--gold);
+    border-radius: 2px;
+    padding: 28px;
+    box-shadow: 0 6px 20px rgba(139,105,20,0.15);
+    display: none;
+    animation: ledger-reveal 1s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .ledger.shown { display: block; }
+  @keyframes ledger-reveal {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ledger-title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 18px;
+    color: var(--gold-deep);
+    letter-spacing: 0.2em;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .ledger-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    text-align: center;
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+  .ledger-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .ledger-col { text-align: center; }
+  .ledger-col h3 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    margin: 0 0 8px;
+  }
+  .ledger-col.safe  h3 { color: var(--sage); }
+  .ledger-col.naive h3 { color: var(--rose); }
+  .ledger-stat {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+  }
+  .ledger-col.safe  .ledger-stat { color: var(--sage); }
+  .ledger-col.naive .ledger-stat { color: var(--rose); }
+  .ledger-detail {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+    font-size: 14px;
+  }
+  .ledger-link {
+    margin-top: 22px;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--sepia);
+  }
+  .ledger-link a {
+    color: var(--gold-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 880px) {
+    .stage { grid-template-columns: 1fr; }
+    .divider {
+      width: 100%; height: 30px; margin: 16px 0;
+      background: linear-gradient(to right, transparent, var(--gold) 8%, var(--gold) 92%, transparent);
+      background-size: 100% 1.5px;
+    }
+    .ledger-cols { grid-template-columns: 1fr; }
+    h1.title { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="title-block">
+  <h1 class="title">A Tale of Two Publishing Methods</h1>
+  <p class="subtitle">In which manifests, like good manners, prevent considerable embarrassment.</p>
+</div>
+
+<div class="status-bar">
+  <span class="status-pill" id="status-pill">CONNECTING…</span>
+  <span class="status-text" id="status-text">…</span>
+  <span class="status-meta" id="status-meta">—</span>
+</div>
+
+<div class="stage">
+
+  <section class="library safe">
+    <header class="library-head">
+      <div class="library-chapter">CHAPTER THE FIRST</div>
+      <h2 class="library-title">Mr. Darcy's Library</h2>
+      <div class="library-sub">Publishing via the manifest, atomically and in private.</div>
+      <div class="prefix-pill">staging/demo/v2/  +  published/demo/latest.json</div>
+    </header>
+
+    <div class="writer-status" id="safe-writer">at rest</div>
+
+    <div class="section-label">Staging Area<span class="count" id="safe-staging-count">0 files</span></div>
+    <div class="filelist" id="safe-staging"></div>
+
+    <div class="manifest-zone">
+      <div class="section-label" style="border:none;margin:0 0 8px;padding:0;">The Manifest</div>
+      <div class="manifest-pointer">
+        <div class="ptr-box active" id="ptr-v1">
+          <span class="v">VOLUME I</span>
+          <span class="rows" id="ptr-v1-rows">—</span>
+          <span class="rows-sub">rows</span>
+        </div>
+        <div class="ptr-arrow">⇆</div>
+        <div class="ptr-box" id="ptr-v2">
+          <span class="v">VOLUME II</span>
+          <span class="rows" id="ptr-v2-rows">—</span>
+          <span class="rows-sub">rows</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Enquiries Received<span class="count" id="safe-enq-count">0</span></div>
+    <div class="enquiries" id="safe-enq"></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="library naive">
+    <header class="library-head">
+      <div class="library-chapter">CHAPTER THE SECOND</div>
+      <h2 class="library-title">Mr. Wickham's Library</h2>
+      <div class="library-sub">Overwriting in place. No manifest, no safety net.</div>
+      <div class="prefix-pill">curated/demo/</div>
+    </header>
+
+    <div class="writer-status" id="naive-writer">at rest</div>
+
+    <div class="section-label">Curated Area<span class="count" id="naive-files-count">0 files</span></div>
+    <div class="filelist" id="naive-files"></div>
+
+    <div class="no-manifest">✕  no manifest — no atomic switch — no safety net</div>
+
+    <div class="section-label">Enquiries Received<span class="count" id="naive-enq-count">0</span></div>
+    <div class="enquiries" id="naive-enq"></div>
+  </section>
+
+</div>
+
+<div class="ledger" id="ledger">
+  <div class="ledger-title">❦  THE LEDGER OF CONSEQUENCES  ❦</div>
+  <p class="ledger-quote">
+    &ldquo;It is a truth universally acknowledged, that a dataset in possession of a good manifest must be in want of no readers in distress.&rdquo;
+  </p>
+  <div class="ledger-cols">
+    <div class="ledger-col safe">
+      <h3>Mr. Darcy's Library</h3>
+      <div class="ledger-stat" id="ledger-safe">—</div>
+      <div class="ledger-detail" id="ledger-safe-detail">enquiries answered without incident</div>
+    </div>
+    <div class="ledger-col naive">
+      <h3>Mr. Wickham's Library</h3>
+      <div class="ledger-stat" id="ledger-naive">—</div>
+      <div class="ledger-detail" id="ledger-naive-detail">in damages</div>
+    </div>
+  </div>
+  <div class="ledger-link">
+    Persistent report saved at <code>results/demo_report.html</code>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => n == null ? '—' : Number(n).toLocaleString();
+
+// Track the last-seen counts so we know when to append/animate
+let lastSafeEnq = 0, lastNaiveEnq = 0;
+let lastSafeStaging = 0, lastNaiveFiles = 0;
+let lastNaiveHint = null;
+
+async function poll() {
+  try {
+    const r = await fetch('/api/state');
+    if (r.ok) {
+      const s = await r.json();
+      render(s);
+    }
+  } catch (e) {}
+  setTimeout(poll, 250);
+}
+
+function render(s) {
+  // ── Status bar ──────────────────────────────────────────
+  const act = s.act;
+  const actLabels = {
+    'idle':  ['IDLE', 'Awaiting the curtain to rise…'],
+    'setup': ['SETUP', 'Publishing the v1 baseline to both libraries…'],
+    'safe':  ['ACT I',  'Mr. Darcy publishes Volume the Second via the manifest.'],
+    'naive': ['ACT II', 'Mr. Wickham overwrites curated/ in place.'],
+    'done':  ['CURTAIN', 'The demonstration is complete. Persistent report saved.']
+  };
+  const [pillText, textPart] = actLabels[act] || ['—', '—'];
+  $('status-pill').textContent = pillText;
+  $('status-pill').className = 'status-pill' + (act === 'done' ? ' done' : '');
+  $('status-text').textContent = textPart;
+  if (s.bucket) {
+    $('status-meta').textContent = `${s.backend_name}://${s.bucket}/${s.dataset_id}/`;
+  }
+
+  // ── Writer status badges ────────────────────────────────
+  renderWriterStatus('safe', s.safe);
+  renderWriterStatus('naive', s.naive);
+
+  // ── Baseline row counts in manifest pointer ────────────
+  if (s.baseline_v1 != null) $('ptr-v1-rows').textContent = fmt(s.baseline_v1);
+  if (s.baseline_v2 != null) $('ptr-v2-rows').textContent = fmt(s.baseline_v2);
+
+  // ── Manifest pointer (active version) ──────────────────
+  const active = s.safe.active_version;
+  $('ptr-v1').classList.toggle('active', active === 'v1' || active == null);
+  $('ptr-v2').classList.toggle('active', active === 'v2');
+
+  // ── Staging file list ──────────────────────────────────
+  renderFileList($('safe-staging'), s.safe.staging_v2_files, 'v2', lastSafeStaging);
+  lastSafeStaging = s.safe.staging_v2_files;
+  $('safe-staging-count').textContent =
+    s.safe.staging_v2_files === 1 ? '1 file' : `${s.safe.staging_v2_files} files`;
+
+  // ── Curated file list (with v1/v2 hint) ────────────────
+  const hint = s.naive.version_hint;
+  // If hint changed, force full rebuild so files animate with new colour
+  if (hint !== lastNaiveHint) {
+    $('naive-files').innerHTML = '';
+    lastNaiveFiles = 0;
+    lastNaiveHint = hint;
+  }
+  renderFileList($('naive-files'), s.naive.curated_files, hint || 'v1', lastNaiveFiles);
+  lastNaiveFiles = s.naive.curated_files;
+  $('naive-files-count').textContent =
+    s.naive.curated_files === 1 ? '1 file' : `${s.naive.curated_files} files`;
+
+  // ── Enquiries: append new ones ─────────────────────────
+  appendNewEnquiries('safe', s.reads.safe, s.baseline_v1, s.baseline_v2);
+  appendNewEnquiries('naive', s.reads.naive, s.baseline_v1, s.baseline_v2);
+
+  // ── Ledger (at end) ────────────────────────────────────
+  if (s.done) renderLedger(s);
+}
+
+function renderWriterStatus(side, sideState) {
+  const el = $(side + '-writer');
+  if (sideState.writer_busy) {
+    el.textContent = sideState.writer_msg || 'busy…';
+    el.classList.add('active');
+  } else {
+    el.textContent = 'at rest';
+    el.classList.remove('active');
+  }
+}
+
+function renderFileList(container, count, version, prevCount) {
+  if (count === 0) {
+    // Animate existing children out, then clear
+    [...container.children].forEach(c => c.classList.add('removing'));
+    setTimeout(() => {
+      if (container.children.length > 0 &&
+          [...container.children].every(c => c.classList.contains('removing'))) {
+        container.innerHTML = '';
+      }
+    }, 400);
+    return;
+  }
+  // Strip removing class from any survivors
+  [...container.children].forEach(c => c.classList.remove('removing'));
+
+  // Remove the empty state placeholder if any
+  const empty = container.querySelector('.empty-state');
+  if (empty) empty.remove();
+
+  // Need to add files? Append new ones with stagger
+  while (container.children.length < count) {
+    const idx = container.children.length;
+    const div = document.createElement('div');
+    div.className = 'file ' + version;
+    div.textContent = `📜 file_${String(idx + 1).padStart(2, '0')}.parquet`;
+    container.appendChild(div);
+  }
+  // Too many? Remove from the end
+  while (container.children.length > count) {
+    container.removeChild(container.lastChild);
+  }
+  // Update colour class on existing children (in case version changed)
+  [...container.children].forEach(c => {
+    c.classList.remove('v1', 'v2');
+    c.classList.add(version);
+  });
+}
+
+function appendNewEnquiries(side, reads, v1, v2) {
+  const container = $(side + '-enq');
+  const counter = $(side + '-enq-count');
+  const lastSeen = side === 'safe' ? lastSafeEnq : lastNaiveEnq;
+
+  // If list shrank (e.g. demo reset), rebuild
+  if (reads.length < lastSeen) {
+    container.innerHTML = '';
+    if (side === 'safe') lastSafeEnq = 0; else lastNaiveEnq = 0;
+  }
+
+  for (let i = (side === 'safe' ? lastSafeEnq : lastNaiveEnq); i < reads.length; i++) {
+    container.appendChild(makeEnquiryCard(reads[i], side, v1, v2));
+  }
+  if (side === 'safe') lastSafeEnq = reads.length;
+  else lastNaiveEnq = reads.length;
+
+  counter.textContent = reads.length;
+}
+
+function makeEnquiryCard(rec, side, v1, v2) {
+  const initials = rec.initials || '??';
+  const name = rec.reader || 'A Stranger';
+  const t = rec.time != null ? rec.time : 0;
+
+  // Classify outcome
+  let cls, label, sub, rowsHtml, moodHtml;
+  if (!rec.ok) {
+    cls = 'calamity';
+    label = '✕  CALAMITY';
+    sub = 'the dataset has vanished entirely';
+    rowsHtml = `<div class="reader-rows" style="font-size:14px;color:var(--rose);">no data</div>`;
+    moodHtml = '';
+  } else {
+    const rows = rec.rows;
+    if (v1 != null && rows === v1) {
+      cls = 'ok-v1';
+      label = '✓  Volume the First, intact';
+      sub = `${fmt(rows)} rows`;
+    } else if (v2 != null && rows === v2) {
+      cls = 'ok-v2';
+      label = '✓  Volume the Second, atomically arrived';
+      sub = `${fmt(rows)} rows`;
+    } else {
+      cls = 'partial';
+      label = '⚠  Partial reading';
+      const ref = v2 || v1 || 1;
+      sub = `${fmt(rows)} rows (expected ~${fmt(ref)})`;
+    }
+    rowsHtml = `<div class="reader-rows">${fmt(rows)}<span class="sub">rows</span></div>`;
+    const topMood = (rec.top_moods && rec.top_moods.length) ? rec.top_moods[0] : null;
+    moodHtml = topMood
+      ? `<div class="top-mood">Top mood observed: <span class="top-mood-val">${topMood.value}</span></div>`
+      : '';
+  }
+
+  const div = document.createElement('div');
+  div.className = `enquiry ${cls}`;
+  div.innerHTML = `
+    <div class="enquiry-head">
+      <div class="reader-avatar">${initials}</div>
+      <div>
+        <div class="reader-name">${name}</div>
+        <div class="reader-time">enquired at t = ${t.toFixed(1)}s</div>
+      </div>
+      ${rowsHtml}
+    </div>
+    <div class="outcome-row">
+      <span class="outcome-label">${label}</span>
+      <span class="outcome-sub">${sub}</span>
+    </div>
+    ${moodHtml}
+  `;
+  return div;
+}
+
+function renderLedger(s) {
+  $('ledger').classList.add('shown');
+  const safeOK = s.reads.safe.filter(r => r.ok && (r.rows === s.baseline_v1 || r.rows === s.baseline_v2)).length;
+  const safeTotal = s.reads.safe.length;
+  const naiveFail = s.reads.naive.filter(r => !r.ok).length;
+  const naivePartial = s.reads.naive.filter(r => r.ok && r.rows !== s.baseline_v1 && r.rows !== s.baseline_v2).length;
+  const damages = (naiveFail + naivePartial) * 300;
+
+  $('ledger-safe').textContent = `${safeOK}/${safeTotal}`;
+  $('ledger-safe-detail').textContent = 'enquiries answered without incident';
+  $('ledger-naive').textContent = '£' + damages;
+  $('ledger-naive-detail').textContent =
+    `in damages from ${naiveFail} calamities & ${naivePartial} partial readings`;
+}
+
+// Kick off polling
+poll();
+</script>
+
+</body>
+</html>
